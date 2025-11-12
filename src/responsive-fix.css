@@ -1,0 +1,68 @@
+/* src/responsive-fix.css
+   Small, safe overrides that improve responsiveness without altering styles/structure.
+   Load this AFTER your index.css so these rules apply only where needed.
+*/
+
+/* 1) predictable box-sizing for all elements */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2) make media elements fluid (fixes overflowing images/videos) */
+img,
+picture,
+video,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block; /* prevents baseline whitespace */
+}
+
+/* 3) ensure root container is width-aware and uses safe padding */
+:root {
+  --safe-h-padding: 2rem; /* default desktop padding (keeps visual style) */
+}
+#root {
+  width: 100%;
+  max-width: 1280px; /* keep your existing maximum width */
+  margin: 0 auto;
+  padding-left: var(--safe-h-padding);
+  padding-right: var(--safe-h-padding);
+  box-sizing: border-box;
+}
+
+/* 4) reduce horizontal padding on small devices (purely responsive) */
+@media (max-width: 768px) {
+  :root { --safe-h-padding: 1rem; }
+}
+@media (max-width: 420px) {
+  :root { --safe-h-padding: 0.75rem; }
+}
+
+/* 5) fix common cause of horizontal overflow (fixed/sticky elements using 100vw) */
+/* This is conservative — it only ensures fixed/sticky containers use viewport width correctly. */
+header, nav, .fixed, .sticky, .site-header, .navbar {
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 6) break long words/inline code to avoid overflow */
+* {
+  word-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+/* 7) optional gentle fix for page-level horizontal scroll */
+/* NOTE: enable only if you see a small horizontal scrollbar on mobile.
+   It prevents off-by-scrollbar 100vw bugs. Use with caution. */
+html, body {
+  /*overflow-x: hidden;*/ /* <-- Uncomment to enable aggressive scrollbar-hiding fix */
+}
+
+/* 8) small helpers you can reuse where needed without changing structure */
+.fix-maxwidth { max-width: 100%; }

@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Root container */
+#root {
+  --main-color: #ff0000;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  /* Animated gradient background */
+  background: linear-gradient(90deg, #FF1E1E, #FF6B00, #FFD60A);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
+  border-radius: 8px;
+}
+
+/* Gradient animation keyframes */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Logo hover glow */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #FFD60Aaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #FF6B00aa);
+}
+
+/* Logo spin animation */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* Card styling */
+.card {
+  padding: 2em;
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(255, 110, 0, 0.2);
+  border: 4px solid;
+  border-image: linear-gradient(to right, #FF1E1E, #FF6B00, #FFD60A) 1;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(255, 150, 0, 0.4);
+}
+
+/* Accent text */
+.read-the-docs {
+  color: #FFD60A;
+  font-weight: 600;
+}
+
+/* Button glowing hover */
+button {
+  background: #FF1E1E;
+  color: white;
+  font-weight: bold;
+  padding: 0.5em 1.5em;
+  border-radius: 0.5em;
+  transition: all 0.5s;
+}
+button:hover {
+  background: linear-gradient(to right, #FF1E1E, #FF6B00, #FFD60A);
+  box-shadow: 0 0 1em #FFD60Aaa;
+  transform: scale(1.05);
+}
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}

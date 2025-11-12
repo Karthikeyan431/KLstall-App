@@ -1,0 +1,108 @@
+/* src/index.css */
+
+/* Global font import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Root / default typography ---------- */
+:root {
+  --brand-1: #FFDEE9;
+  --brand-2: #FFE3B3;
+  --brand-3: #FFF5F9;
+  font-family: 'Poppins', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* ---------- Page background (single source of truth) ---------- */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--brand-1), var(--brand-2), var(--brand-3));
+  background-attachment: fixed;
+  background-size: cover;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Ensure consistent box-sizing on everything */
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* Basic link/button defaults */
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* Small animation helper */
+.animate-fadeIn {
+  animation: fadeIn 0.9s ease-in-out both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Optional container helper */
+.app-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Custom scrollbar (optional) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ff7ac3;
+  border-radius: 10px;
+}
+
+/* Ensure root children stretch vertically */
+#__next, #root {
+  width: 100%;
+  min-height: 100%;
+}
+/* --- FIX: Remove any unwanted borders or overflow --- */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  overflow-x: hidden !important;
+}
+
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+@layer utilities {
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 14px rgba(239, 68, 68, 1);
+      transform: scale(1.1);
+    }
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 1.5s infinite;
+  }
+}

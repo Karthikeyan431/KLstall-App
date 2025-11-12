@@ -1,0 +1,140 @@
+import React, { useEffect, useState } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+
+export default function Orders() {
+  const [orders, setOrders] = useState([]);
+  const [expandedOrder, setExpandedOrder] = useState(null);
+
+  useEffect(() => {
+    const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+    setOrders(savedOrders);
+  }, []);
+
+  const toggleExpand = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
+  const handleDownloadInvoice = (order) => {
+    try {
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("KL STALL & DECORS", 15, 20);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Event Management | Stall | Decoration | DJ | Venue", 15, 27);
+      doc.text("📍 Thirukkazhukundram | 📞 +91 8220584194", 15, 33);
+      doc.line(10, 38, 200, 38);
+
+      // Order info
+      doc.setFontSize(12);
+      doc.text(`🧾 Invoice: #${order.id}`, 15, 48);
+      doc.text(`📅 Date: ${order.date}`, 15, 55);
+
+      // Table
+      const items = order.items || [];
+      const tableData = items.map((item, index) => [
+        index + 1,
+        item.title || "-",
+        `₹${item.price || 0}`,
+        item.quantity || 1,
+        `₹${(item.price || 0) * (item.quantity || 1)}`,
+      ]);
+
+      autoTable(doc, {
+        head: [["#", "Item", "Price", "Qty", "Total"]],
+        body: tableData,
+        startY: 65,
+        theme: "striped",
+        headStyles: { fillColor: [255, 0, 0], textColor: [255, 255, 255] },
+        bodyStyles: { textColor: [0, 0, 0] },
+      });
+
+      // Total
+      const finalY = doc.lastAutoTable?.finalY || 75;
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Grand Total: ₹${order.totalPrice || 0}`, 15, finalY + 10);
+
+      // Footer
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("✨ Thank you for choosing KL Stall & Decors ✨", 15, finalY + 20);
+      doc.text("We make your events memorable!", 15, finalY + 27);
+
+      doc.save(`KLSTALL_Invoice_${order.id}.pdf`);
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      alert("Failed to generate invoice. Please check console.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-yellow-400 via-red-400 to-white p-6">
+      <h1 className="text-3xl font-extrabold text-white mb-8 text-center drop-shadow-lg">
+        📦 Your Orders
+      </h1>
+
+      {orders.length === 0 ? (
+        <p className="text-center text-gray-800 text-lg">
+          No orders yet. Go add some packages!
+        </p>
+      ) : (
+        <div className="max-w-4xl mx-auto bg-white/95 rounded-2xl shadow-xl p-6 space-y-4">
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              onClick={() => toggleExpand(order.id)}
+              className="bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-semibold text-red-600">
+                    Order #{order.id}
+                  </h2>
+                  <p className="text-gray-600 text-sm">📅 {order.date}</p>
+                </div>
+                <div className="flex gap-2">
+                  <p className="text-gray-700 font-bold">₹{order.totalPrice}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadInvoice(order);
+                    }}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-yellow-500 transition text-sm"
+                  >
+                    ⬇️ PDF
+                  </button>
+                </div>
+              </div>
+
+              {expandedOrder === order.id && (
+                <div className="mt-4 border-t border-gray-300 pt-3 animate-fadeIn">
+                  {order.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center py-2 border-b border-gray-100"
+                    >
+                      <p className="text-gray-700">
+                        {item.title} (x{item.quantity || 1})
+                      </p>
+                      <p className="font-medium text-gray-800">
+                        ₹{item.price * (item.quantity || 1)}
+                      </p>
+                    </div>
+                  ))}
+                  <p className="text-right mt-3 font-bold text-red-600">
+                    Total: ₹{order.totalPrice}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
