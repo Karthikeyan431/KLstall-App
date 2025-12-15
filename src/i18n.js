@@ -1,0 +1,601 @@
+// src/i18n.js
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+const resources = {
+  en: {
+    translation: {
+      // general
+      welcome: "Welcome",
+      user: "User",
+      home: "Home",
+      settings: "Settings",
+      profile: "Profile",
+      packages: "Packages",
+      cart: "Cart",
+      dashboard: "Dashboard",
+      orders: "Orders",
+      features: "Features",
+
+      // hero
+      hero_tagline: "Transforming events, inspiring memories",
+      brand: "KL Stall & Decors",
+      hero_description_part1: "Your one-stop solution for",
+      hero_event_decor: "event decorations",
+      hero_event_tail: "buffet stalls, and complete event management. Bringing",
+      hero_event_tail_bold: "style & creativity",
+      hero_event_tail_after: "to every celebration ✨",
+      view_packages: "View Packages",
+      get_a_quote: "Get a Quote",
+
+      // why choose us
+      why_title: "Why Choose Us?",
+      why_desc:
+        "At KL Stall & Decors, we don’t just decorate — we create unforgettable experiences and ensure perfection in every detail.",
+      feature_1_title: "Creative Designs",
+      feature_1_desc:
+        "Unique, modern, and eye-catching decorations tailored to your exact theme.",
+      feature_2_title: "Affordable Packages",
+      feature_2_desc:
+        "Transparent pricing and customizable plans for every type of celebration.",
+      feature_3_title: "Trusted Team",
+      feature_3_desc:
+        "Experienced professionals ensuring smooth, beautiful, stress-free events.",
+
+      // CTA
+      cta_title: "Ready to Plan Your Perfect Event?",
+      cta_button: "Get a Free Consultation",
+
+      // testimonials
+      testimonials_title: "What Our Clients Say",
+      t1_quote:
+        "The decorations were absolutely stunning! Our wedding looked magical and stress-free.",
+      t1_name: "Priya S.",
+      t1_location: "Chennai",
+      t1_rating: "⭐⭐⭐⭐⭐",
+
+      t2_quote:
+        "Professional and very budget-friendly. They transformed our corporate event space perfectly.",
+      t2_name: "Ravi K.",
+      t2_location: "Event Organizer",
+      t2_rating: "⭐⭐⭐⭐⭐",
+
+      t3_quote:
+        "Highly recommended! Their buffet stall design was a huge hit with all our guests.",
+      t3_name: "Arun M.",
+      t3_location: "Birthday Host",
+      t3_rating: "⭐⭐⭐⭐⭐",
+
+      // footer
+      footer_copyright:
+        "© {{year}} KL Stall & Decors. All rights reserved.",
+      footer_based: "Based in Chennai, India",
+      footer_crafted: "Crafted with ♥",
+
+      // settings/profile
+      profile_info: "Profile",
+      full_name: "Full Name",
+      phone: "Phone",
+      address: "Address",
+      save_profile: "Save Profile",
+      app_prefs: "App Preferences",
+      theme: "Theme",
+      language: "Language",
+      notifications: "Notifications",
+      chatbot: "Enable Chatbot",
+      change_password: "Change Password",
+      new_password: "New Password",
+      change_pass_btn: "Change Password",
+      wallet: "Wallet",
+      open_wallet: "Open Wallet",
+      support: "Support",
+      contact_support: "Contact Support",
+      account: "Account",
+      logout: "Logout",
+      delete_account: "Delete Account",
+      light: "Light",
+      dark: "Dark",
+      enabled: "Enabled",
+      disabled: "Disabled",
+
+      // login
+      login_welcome_back: "Welcome Back!",
+      email_address: "Email Address",
+      password: "Password",
+      logging_in: "Logging in...",
+      login_btn: "Login 🎉",
+      or: "or",
+      continue_as_guest: "Continue as Guest 🚀",
+      create_account: "Create an account",
+      forgot_password: "Forgot password?",
+
+      dashboard_title: "Event Management Dashboard",
+      welcome_back: "Welcome Back",
+      your_overview: "Your Overview",
+      sign_out: "Sign Out",
+      email: "Email",
+      user_id: "User ID",
+      coins: "Coins",
+      our_services: "Our Services",
+      services_desc: "Add, edit or manage your event packages easily.",
+      bookings: "Bookings",
+      bookings_desc: "Check and manage all customer bookings.",
+      go: "Go",
+      loading_user: "Loading user...",
+      //reset
+      "reset_title": "Reset Your Password",
+      "reset_subtitle": "We’ll send a password reset link to your registered email.",
+      "email_placeholder": "Enter your email address",
+      "sending": "Sending...",
+      "send_reset_link": "Send Reset Link",
+      "back_to_login": "Back to Login",
+      "enter_email_error": "Please enter your email.",
+      "reset_success": "If the email is registered, a reset link has been sent!",
+      "reset_error": "Failed to send reset link. Try again.",
+      
+      // CART
+      your_cart: "Your Cart",
+      empty_cart: "Your cart is empty!",
+      browse_packages: "Browse Packages",
+      no_image: "No Image",
+      remove_failed: "Failed to remove item.",
+      item_removed: "Item removed!",
+      qty_failed: "Failed to update quantity.",
+      qty_updated: "Quantity updated!",
+      login_first: "Please log in first!",
+      order_success: "Order placed successfully! 💵",
+      order_failed: "Could not place order. Try again!",
+      online_payment: "Online Payment",
+      payment_success: "Payment successful 🎉",
+      payment_failed: "Payment failed. Try again.",
+      payment_verification_error: "Error verifying payment.",
+      total: "Total",
+      cash_delivery: "Cash on Delivery",
+      pay_online: "Pay Online",
+      loading_cart: "Loading cart...",
+
+     // PROFILE PAGE
+      your_profile: "Your Profile",
+      no_avatar: "No Avatar",
+      change: "Change",
+      complete: "complete",
+      loading_profile: "Loading profile...",
+      profile_image_updated: "Profile image updated!",
+      upload_failed: "Upload failed",
+      profile_saved: "Profile saved!",
+      login_required: "Please login first",
+      name_required: "Name is required",
+      phone_required: "Phone number is required",
+      address_required: "Address is required",
+
+      full_name: "Full Name",
+      phone: "Phone",
+      address: "Address",
+      about_optional: "About (optional)",
+      save_profile: "Save Profile",
+      saving: "Saving...",
+      settings: "Settings",
+      logout: "Logout",
+
+      // STATS INFO (optional future use)
+      total_orders: "Total Orders",
+      pending_orders: "Pending",
+      completed_orders: "Completed",
+
+// chatbot
+
+  "chat_title": "AI Assistant",
+  "chat_welcome": "Hi! I'm your KL Stall AI assistant. How can I help you today?",
+  "chat_placeholder": "Ask about packages, bookings, orders, or services...",
+  "chat_clear": "Clear Chat",
+  "chat_send": "Send",
+  "sending": "Sending...",
+  
+  "chat_suggestions_title": "Quick Questions",
+  "chat_suggestion_packages": "Show available packages",
+  "chat_suggestion_booking_steps": "How to make a booking?",
+  "chat_suggestion_order_status": "Check my order status",
+  "chat_suggestion_contact": "How can I contact KL Stall?",
+  "chat_suggestion_services": "What services do you provide?",
+
+  "chat_error_empty": "Please type a message.",
+  "chat_error_network": "Network error. Please try again.",
+  "chat_bot_typing": "Typing...",
+
+// orders
+  "my_orders": "My Orders",
+  "loading_orders": "Loading orders...",
+  "no_orders": "No orders yet. Start shopping now!",
+  "order_id": "Order ID",
+  "payment": "Payment",
+  "total": "Total",
+  "status": "Status",
+  "pending": "Pending",
+  "download_pdf": "⬇ Download PDF",
+  "generating": "Generating...",
+  "cancel": "❌ Cancel",
+  "return": "🔄 Return",
+  "processing": "Processing...",
+  "cancel_confirm": "Cancel this order?",
+  "return_confirm": "Request a return?",
+  "yes": "Yes",
+  "no": "No",
+  "order_cancelled": "Order cancelled successfully!",
+  "order_returned": "Return requested!",
+  "order_updated": "Order updated!",
+  "orders_load_error": "Could not load your orders. Please try again later.",
+  "orders_update_error": "Failed to update order status.",
+  "pdf_success": "PDF downloaded successfully!",
+  "pdf_failed": "Failed to generate PDF.",
+  "na": "N/A",
+
+// packages
+"our_packages": "Our Packages",
+"cat_all": "All",
+"cat_stall": "Stall",
+"cat_decoration": "Decoration",
+"cat_dj": "DJ",
+"cat_venues": "Venues",
+"search_packages": "Search packages...",
+"sort_by": "Sort By",
+"price_low_high": "Price: Low → High",
+"price_high_low": "Price: High → Low",
+"title_az": "Title: A → Z",
+"title_za": "Title: Z → A",
+"no_packages_found": "No packages found.",
+"add_to_cart": "Add to Cart 🛒",
+"added_to_cart": "Added to cart 🛒",
+"login_to_add": "Login to add",
+"cart_btn": "Cart",
+
+// contact
+  "contact_us": "Contact Us",
+  "contact_subtitle": "We’re here to help! Reach us anytime for bookings, events, stall services or decorations.",
+  
+  "send_message": "Send Us a Message",
+  "your_name": "Your Name",
+  "your_phone": "Your Phone Number",
+  "your_message": "Write your message",
+  "send_now": "Send Now",
+  "sending": "Sending...",
+  "contact_success": "Your message has been sent successfully!",
+  "contact_error": "Failed to send message. Please try again!",
+
+  "contact_details": "Contact Details",
+  "office_location": "Office Location",
+  "phone": "Phone Numbers",
+  "email": "Email",
+  "social_links": "Social Links",
+  "view_on_maps": "View on Google Maps",
+
+      // signup block
+      signup: {
+        create_account: "Create your account",
+        join: "Join",
+        manage_stall: "— manage your stall effortlessly.",
+        placeholder_email: "Email",
+        placeholder_password: "Password (min 6 characters)",
+        error_fill_fields: "Please enter email and password.",
+        success_message: "Signup successful! Check your email to confirm.",
+        creating: "Creating account...",
+        signup_btn: "Sign up",
+        already_account: "Already have an account?",
+        login: "Login"
+      }
+    }
+  },
+
+  ta: {
+    translation: {
+      // general
+      welcome: "வணக்கம்",
+      user: "பயனர்",
+      home: "முகப்பு",
+      settings: "அமைப்புகள்",
+      profile: "சுயவிவரம்",
+      packages: "பேக்கேஜ்கள்",
+      cart: "கூடை",
+      dashboard: "டாஷ்போர்டு",
+      orders: "ஆர்டர்கள்",
+      features: "வசதிகள்",
+
+      // hero
+      hero_tagline: "நிகழ்ச்சிகளை மாற்றுதல், நினைவுகளை உருவாக்குதல்",
+      brand: "KL Stall & Decors",
+      hero_description_part1: "உங்கள் ஒரே இட தீர்வு",
+      hero_event_decor: "நிகழ்ச்சி அலங்காரங்கள்",
+      hero_event_tail:
+        "பஃபெ ஸ்டால்கள் மற்றும் முழுமையான நிகழ்ச்சி மேலாண்மை. ஒவ்வொரு கொண்டாட்டத்திற்கும்",
+      hero_event_tail_bold: "பாணி & படைப்பாற்றல்",
+      hero_event_tail_after: "சேர்க்கப்படுகிறது ✨",
+      view_packages: "பேக்கேஜ்களை காண்க",
+      get_a_quote: "விலை மதிப்பீடு பெறுங்கள்",
+
+      // why choose us
+      why_title: "ஏன் எங்களை தேர்வு செய்ய வேண்டும்?",
+      why_desc:
+        "KL Stall & Decors இல் நாங்கள் வெறும் அலங்காரம் செய்யவில்லை — மறக்க முடியாத அனுபவங்களை உருவாக்குகிறோம்.",
+      feature_1_title: "படைப்பாற்றல் வடிவமைப்புகள்",
+      feature_1_desc: "உங்கள் தீமுக்கு ஏற்ப தனிப்பட்ட, நவீன அலங்காரங்கள்.",
+      feature_2_title: "விலை குறைந்த பேக்கேஜ்கள்",
+      feature_2_desc: "தெளிவான விலை & தனிப்பயன் திட்டங்கள்.",
+      feature_3_title: "நம்பகமான குழு",
+      feature_3_desc: "அனுபவமிக்க நிபுணர்கள் சிரமமில்லா நிகழ்வுகளை உறுதி செய்கிறார்கள்.",
+
+      // CTA
+      cta_title: "உங்கள் நிகழ்ச்சியை திட்டமிட தயாரா?",
+      cta_button: "இலவச ஆலோசனை பெற",
+
+      // testimonials
+      testimonials_title: "எங்கள் வாடிக்கையாளர்கள் சொல்வது",
+      t1_quote: "அலங்காரங்கள் அற்புதமாக இருந்தன!",
+      t1_name: "பிரியா எஸ்.",
+      t1_location: "சென்னை",
+      t1_rating: "⭐⭐⭐⭐⭐",
+
+      t2_quote: "பட்ஜெட்டுக்கு ஏற்ற தொழில்முறை சேவை.",
+      t2_name: "ரவி கே.",
+      t2_location: "நிகழ்ச்சி ஒருங்கிணைப்பாளர்",
+      t2_rating: "⭐⭐⭐⭐⭐",
+
+      t3_quote: "அவர்களின் பஃபெ ஸ்டால் வடிவமைப்பு மிக பிரபலமானது!",
+      t3_name: "அருண் எம்.",
+      t3_location: "பிறந்தநாள் நிகழ்ச்சி",
+      t3_rating: "⭐⭐⭐⭐⭐",
+
+      // footer
+      footer_copyright:
+        "© {{year}} KL Stall & Decors. அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.",
+      footer_based: "சென்னையில் அமைந்தது, இந்தியா",
+      footer_crafted: "♥ உடன் உருவாக்கப்பட்டது",
+
+      // settings/profile
+      profile_info: "சுயவிவரம்",
+      full_name: "முழு பெயர்",
+      phone: "தொலைபேசி",
+      address: "முகவரி",
+      save_profile: "சேமிக்கவும்",
+      app_prefs: "அப் விருப்பங்கள்",
+      theme: "தீம்",
+      language: "மொழி",
+      notifications: "அறிவிப்புகள்",
+      chatbot: "சாட்பாட்",
+      change_password: "கடவுச்சொல் மாற்று",
+      new_password: "புதிய கடவுச்சொல்",
+      change_pass_btn: "மாற்று",
+      wallet: "வாலெட்",
+      open_wallet: "வாலெட் திறக்க",
+      support: "ஆதரவு",
+      contact_support: "தொடர்பு கொள்ளவும்",
+      account: "கணக்கு",
+      logout: "வெளியேறு",
+      delete_account: "கணக்கை நீக்கு",
+      light: "ஒளி",
+      dark: "இருள்",
+      enabled: "இயக்கப்பட்டது",
+      disabled: "முடக்கப்பட்டது",
+
+      // login
+      login_welcome_back: "மீண்டும் வருக!",
+      email_address: "மின்னஞ்சல் முகவரி",
+      password: "கடவுச்சொல்",
+      logging_in: "உள்ளே சென்று கொண்டிருக்கிறது...",
+      login_btn: "உள்நுழையவும் 🎉",
+      or: "அல்லது",
+      continue_as_guest: "விருந்தினராக தொடரவும் 🚀",
+      create_account: "கணக்கை உருவாக்கவும்",
+      forgot_password: "கடவுச்சொல் மறந்துவிட்டதா?",
+
+      dashboard_title: "நிகழ்வு மேலாண்மை டாஷ்போர்டு",
+      welcome_back: "மீண்டும் வருக",
+      your_overview: "உங்கள் மேலோட்டத் தகவல்",
+      sign_out: "வெளியேறு",
+      email: "மின்னஞ்சல்",
+      user_id: "பயனர் ஐடி",
+      coins: "நாணயங்கள்",
+      our_services: "எங்கள் சேவைகள்",
+      services_desc: "உங்கள் நிகழ்ச்சி தொகுப்புகளை எளிதில் சேர்க்கவும், திருத்தவும் அல்லது மேலாண்மை செய்யவும்.",
+      bookings: "முன்பதிவுகள்",
+      bookings_desc: "அனைத்து வாடிக்கையாளர் முன்பதிவுகளையும் சரிபார்த்து மேலாண்மை செய்யவும்.",
+      go: "செல்ல",
+      loading_user: "பயனர் ஏற்றப்படுகிறது...",
+      //resetpassword
+      "reset_title": "உங்கள் கடவுச்சொல்லை மீட்டமைக்கவும்",
+      "reset_subtitle": "உங்கள் மின்னஞ்சல் முகவரிக்கு மீட்டமைப்பு இணைப்பு அனுப்பப்படும்.",
+      "email_placeholder": "உங்கள் மின்னஞ்சலை உள்ளிடவும்",
+      "sending": "அனுப்பப்படுகிறது...",
+      "send_reset_link": "மீட்டமைப்பு இணைப்பை அனுப்பவும்",
+      "back_to_login": "உள்நுழைவுக்கு திரும்பவும்",
+      "enter_email_error": "மின்னஞ்சலை உள்ளிடவும்.",
+      "reset_success": "மின்னஞ்சல் பதிவு செய்யப்பட்டிருந்தால், மீட்டமைப்பு இணைப்பு அனுப்பப்படும்!",
+      "reset_error": "இணைப்பு அனுப்ப முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+      
+      // CART
+      your_cart: "உங்கள் கூடை",
+      empty_cart: "உங்கள் கூடை காலியாக உள்ளது!",
+      browse_packages: "பேக்கேஜ்களை பார்க்க",
+      no_image: "படம் இல்லை",
+      remove_failed: "உருப்படியை நீக்க முடியவில்லை.",
+      item_removed: "உருப்படி நீக்கப்பட்டது!",
+      qty_failed: "அளவை புதுப்பிக்க முடியவில்லை.",
+      qty_updated: "அளவு புதுப்பிக்கப்பட்டது!",
+      login_first: "முதலில் உள்நுழைக!",
+      order_success: "ஆர்டர் வெற்றிகரமாக செய்யப்பட்டது! 💵",
+      order_failed: "ஆர்டர் செய்ய முடியவில்லை! மீண்டும் முயற்சி செய்யவும்.",
+      online_payment: "ஆன்லைன் கட்டணம்",
+      payment_success: "கட்டணம் வெற்றிகரமாக முடிந்தது 🎉",
+      payment_failed: "கட்டணம் தோல்வியடைந்தது.",
+      payment_verification_error: "கட்டணம் சரிபார்ப்பு பிழை.",
+      total: "மொத்தம்",
+      cash_delivery: "காசோலை / டெலிவரி",
+      pay_online: "ஆன்லைனில் செலுத்தவும்",
+      loading_cart: "கூடை ஏற்றப்படுகிறது...",
+     
+     // PROFILE PAGE
+      your_profile: "உங்கள் சுயவிவரம்",
+      no_avatar: "படம் இல்லை",
+      change: "மாற்று",
+      complete: "நிறைவு",
+      loading_profile: "சுயவிவரம் ஏற்றப்படுகிறது...",
+      profile_image_updated: "சுயவிவர படம் வெற்றிகரமாக புதுப்பிக்கப்பட்டது!",
+      upload_failed: "பதிவேற்றம் தோல்வியடைந்தது",
+      profile_saved: "சுயவிவரம் சேமிக்கப்பட்டது!",
+      login_required: "முதலில் உள்நுழைக",
+      name_required: "பெயர் தேவை",
+      phone_required: "தொலைபேசி எண் தேவை",
+      address_required: "முகவரி தேவை",
+
+      full_name: "முழு பெயர்",
+      phone: "தொலைபேசி",
+      address: "முகவரி",
+      about_optional: "விவரம் (விருப்பம்)",
+      save_profile: "சேமிக்க",
+      saving: "சேமித்து வருகிறது...",
+      settings: "அமைப்புகள்",
+      logout: "வெளியேறு",
+     
+      // STATS INFO
+      total_orders: "மொத்த ஆர்டர்கள்",
+      pending_orders: "நிலுவையில்",
+      completed_orders: "நிறைவு",  
+
+     // ORDERS PAGE
+        my_orders: "📦 எனது ஆர்டர்கள்",
+        loading_orders: "ஆர்டர்கள் ஏற்றப்படுகிறது...",
+        no_orders_yet: "ஆர்டர்கள் எதுவும் இல்லை. முதலில் வாங்கத் தொடங்குங்கள்!",
+        order_id: "ஆர்டர் ஐடி",
+        payment: "கட்டணம்",
+        total: "மொத்தம்",
+        status: "நிலை",
+        download_pdf: "⬇ PDF பதிவிறக்கம்",
+        generating_pdf: "உருவாக்கப்படுகிறது...",
+        cancel_order: "❌ ரத்து செய்யவும்",
+        processing: "செயலாக்கப்படுகிறது...",
+        return_order: "🔄 திருப்பி அனுப்பு",
+        cancel_confirm: "இந்த ஆர்டரை ரத்து செய்யவா?",
+        return_confirm: "மீளளிப்பு கோர விரும்புகிறீர்களா?",
+        yes: "ஆம்",
+        no: "இல்லை",
+  
+        order_updated: "ஆர்டர் புதுப்பிக்கப்பட்டது!",
+        order_cancelled: "ஆர்டர் வெற்றிகரமாக ரத்து செய்யப்பட்டது!",
+        order_return_requested: "மீளளிப்பு கோரிக்கை அனுப்பப்பட்டது!",
+        load_orders_failed: "ஆர்டர்களை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+        update_failed: "ஆர்டர் நிலையைப் புதுப்பிக்க முடியவில்லை.",
+        pdf_success: "PDF வெற்றிகரமாக பதிவிறக்கப்பட்டது!",
+        pdf_failed: "PDF உருவாக்கத்தில் பிழை ஏற்பட்டது.", 
+
+// chatbot
+
+  "chat_title": "ஏஐ உதவியாளர்",
+  "chat_welcome": "வணக்கம்! நான் KL Stall AI உதவியாளர். இன்று உங்களுக்கு எப்படி உதவலாம்?",
+  "chat_placeholder": "பேக்கேஜ், புக்கிங், ஆர்டர் ஸ்டேட்டஸ் அல்லது சேவைகள் பற்றி கேளுங்கள்...",
+  "chat_clear": "அழிக்க",
+  "chat_send": "அனுப்பு",
+  "sending": "அனுப்பப்படுகிறது...",
+
+  "chat_suggestions_title": "விரைவான கேள்விகள்",
+  "chat_suggestion_packages": "கிடைக்கும் பேக்கேஜ்களை காட்டு",
+  "chat_suggestion_booking_steps": "புக்கிங் செய்வது எப்படி?",
+  "chat_suggestion_order_status": "என் ஆர்டர் ஸ்டேட்டஸ்?",
+  "chat_suggestion_contact": "KL Stall-ஐ எப்படி தொடர்பு கொள்வது?",
+  "chat_suggestion_services": "என்னென்ன சேவைகள் கிடைக்கும்?",
+
+  "chat_error_empty": "தயவு செய்து ஒரு செய்தியை உள்ளிடவும்.",
+  "chat_error_network": "இணையப் பிழை! மீண்டும் முயற்சிக்கவும்.",
+  "chat_bot_typing": "எழுதுகிறது...",
+
+// packages
+"our_packages": "எங்கள் பேக்கேஜ்கள்",
+"cat_all": "அனைத்து",
+"cat_stall": "ஸ்டால்",
+"cat_decoration": "அலங்காரம்",
+"cat_dj": "டிஜே",
+"cat_venues": "நிகழ்ச்சி இடங்கள்",
+"search_packages": "பேக்கேஜ்களைத் தேடுங்கள்...",
+"sort_by": "வரிசைப்படுத்து",
+"price_low_high": "விலை: குறைந்தது → அதிகம்",
+"price_high_low": "விலை: அதிகம் → குறைவாக",
+"title_az": "தலைப்பு: A → Z",
+"title_za": "தலைப்பு: Z → A",
+"no_packages_found": "பேக்கேஜ்கள் எதுவும் இல்லை.",
+"add_to_cart": "கூடையில் சேர் 🛒",
+"added_to_cart": "கூடையில் சேர்க்கப்பட்டது 🛒",
+"login_to_add": "சேர்க்க உள்நுழைக",
+"cart_btn": "கூடை",
+
+// orders
+
+  "my_orders": "என் ஆர்டர்கள்",
+  "loading_orders": "ஆர்டர்கள் ஏற்றப்படுகிறது...",
+  "no_orders": "ஆர்டர்கள் எதுவும் இல்லை. ஷாப்பிங் தொடங்குங்கள்!",
+  "order_id": "ஆர்டர் ஐடி",
+  "payment": "கட்டணம்",
+  "total": "மொத்தம்",
+  "status": "நிலை",
+  "pending": "நிலுவையில்",
+  "download_pdf": "⬇ PDF பதிவிறக்க",
+  "generating": "உருவாக்கப்படுகிறது...",
+  "cancel": "❌ ரத்து",
+  "return": "🔄 ரிட்டர்ன்",
+  "processing": "செயலாக்கப்படுகிறது...",
+  "cancel_confirm": "இந்த ஆர்டரை ரத்து செய்யவா?",
+  "return_confirm": "ரிட்டர்ன் கோரிக்கையை அனுப்பவா?",
+  "yes": "ஆம்",
+  "no": "இல்லை",
+  "order_cancelled": "ஆர்டர் வெற்றிகரமாக ரத்து செய்யப்பட்டது!",
+  "order_returned": "ரிட்டர்ன் கோரிக்கை பெறப்பட்டது!",
+  "order_updated": "ஆர்டர் புதுப்பிக்கப்பட்டது!",
+  "orders_load_error": "ஆர்டர்களை ஏற்ற முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  "orders_update_error": "ஆர்டர் நிலையை மாற்ற முடியவில்லை.",
+  "pdf_success": "PDF வெற்றிகரமாக பதிவிறக்கப்பட்டது!",
+  "pdf_failed": "PDF உருவாக்க முடியவில்லை.",
+  "na": "இல்லை",
+
+// contact
+
+  "contact_us": "எங்களை தொடர்பு கொள்ள",
+  "contact_subtitle": "புக்கிங், டெக்கரேஷன், ஸ்டால் அல்லது நிகழ்ச்சி தொடர்பான எந்த உதவியும் - எங்களை எப்போதும் தொடர்பு கொள்ளலாம்!",
+
+  "send_message": "உங்கள் செய்தியை அனுப்புங்கள்",
+  "your_name": "உங்கள் பெயர்",
+  "your_phone": "உங்கள் மொபைல் எண்",
+  "your_message": "உங்கள் செய்தியை எழுதுங்கள்",
+  "send_now": "செய்தி அனுப்பவும்",
+  "sending": "அனுப்பிக் கொண்டிருக்கிறது...",
+  "contact_success": "உங்கள் செய்தி வெற்றிகரமாக அனுப்பப்பட்டது!",
+  "contact_error": "செய்தி அனுப்ப முடியவில்லை. மீண்டும் முயற்சிக்கவும்!",
+
+  "contact_details": "தொடர்பு தகவல்கள்",
+  "office_location": "அலுவலக முகவரி",
+  "phone": "தொலைபேசி எண்கள்",
+  "email": "மின்னஞ்சல்",
+  "social_links": "சமூக வலைத்தளங்கள்",
+  "view_on_maps": "Google Maps-ல் பார்க்க",
+
+      // signup
+      signup: {
+        create_account: "உங்கள் கணக்கை உருவாக்குங்கள்",
+        join: "சேரவும்",
+        manage_stall: "— உங்கள் ஸ்டாலை எளிதாக நிர்வகிக்கலாம்.",
+        placeholder_email: "ஈமெயில்",
+        placeholder_password: "கடவுச்சொல் (குறைந்தது 6 எழுத்துகள்)",
+        error_fill_fields: "ஈமெயில் மற்றும் கடவுச்சொல் உள்ளிடவும்.",
+        success_message: "பதிவு வெற்றிகரமாக முடிந்தது! ஈமெயிலை சரிபார்க்கவும்.",
+        creating: "கணக்கு உருவாக்கப்படுகிறது...",
+        signup_btn: "பதிவு",
+        already_account: "ஏற்கனவே கணக்கு உள்ளதா?",
+        login: "உள்நுழைக"
+      }
+    }
+  }
+};
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: localStorage.getItem("language") || "en",
+  fallbackLng: "en",
+  interpolation: { escapeValue: false }
+});
+
+export default i18n;

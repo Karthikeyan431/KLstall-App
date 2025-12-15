@@ -1,9 +1,12 @@
 // src/pages/Orders.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { ThemeContext } from "../contexts/ThemeContext";
 
+// CONSTANTS (UNCHANGED)
 const LOGO_URL =
   "https://i.ibb.co/qMw20Rfy/IMG-20250917-214439-removebg-preview.png";
 const CONTACT_PHONE_1 = "9566061075";
@@ -12,62 +15,75 @@ const CONTACT_EMAIL = "klstall.decors@gmail.com";
 
 export default function Orders() {
   const { session } = useAuth();
+  const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
+
+  // STATES
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pdfGeneratingId, setPdfGeneratingId] = useState(null);
   const [profileName, setProfileName] = useState("");
-  const [updatingId, setUpdatingId] = useState(null); // disable while updating
+  const [updatingId, setUpdatingId] = useState(null);
 
+  // THEME CLASSES
+  const pageBg =
+    theme === "dark"
+      ? "bg-[#0f0f0f] text-white"
+      : "bg-gradient-to-b from-[#FFF5F9] to-[#FFE4EC] text-[#1a1a1a]";
+
+  const cardClass =
+    theme === "dark"
+      ? "bg-[#1A1A1A] text-white border border-[#FF66C4]/40 shadow-xl"
+      : "bg-white text-black border border-[#FF66C4]/20 shadow-xl";
+
+  const statusText = (status) => {
+    if (status === "cancelled") return "text-red-500 font-semibold";
+    if (status === "returned") return "text-yellow-600 font-semibold";
+    return "text-green-600 font-semibold";
+  };
+
+  // LOAD PROFILE + ORDERS
   useEffect(() => {
     if (session?.user?.id) {
       fetchProfileName();
       fetchOrders();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  // Fetch profile name
   const fetchProfileName = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", session.user.id)
         .single();
-      if (error) throw error;
+
       setProfileName(data?.full_name || "");
-    } catch (err) {
-      console.warn("⚠ Could not fetch profile name:", err?.message || err);
-    }
+    } catch {}
   };
 
-  // Fetch orders
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("orders")
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
       setOrders(data || []);
-    } catch (err) {
-      console.error("❌ Failed to load orders:", err);
-      toast.error("Could not load your orders. Please try again later.");
-    } finally {
-      setLoading(false);
+    } catch {
+      toast.error(t("orders_load_error"));
     }
+    setLoading(false);
   };
 
   const fmtPrice = (v) => Number(v || 0).toFixed(2);
 
-  // Update order status (returns updated row or throws)
+  // UPDATE ORDER STATUS
   const updateOrderStatus = async (id, newStatus) => {
     setUpdatingId(id);
     try {
-      // Request the updated row back with .select().single()
       const { data, error } = await supabase
         .from("orders")
         .update({
@@ -79,110 +95,92 @@ export default function Orders() {
         .select()
         .single();
 
-      if (error) {
-        console.error("Supabase update error:", error);
-        toast.error(error.message || "Failed to update order status.");
-        return null;
-      }
+      if (error) return toast.error(error.message || t("orders_update_error"));
 
-      // Update local state using authoritative DB row if returned
-      if (data) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? data : o)));
-      } else {
-        // fallback: optimistic update
-        setOrders((prev) =>
-          prev.map((order) => (order.id === id ? { ...order, status: newStatus } : order))
-        );
-      }
+      setOrders((prev) => prev.map((o) => (o.id === id ? data : o)));
 
       toast.success(
         newStatus === "cancelled"
-          ? "Order cancelled successfully!"
+          ? t("order_cancelled")
           : newStatus === "returned"
-          ? "Return requested!"
-          : "Order updated!"
+          ? t("order_returned")
+          : t("order_updated")
       );
 
-      // Re-fetch to ensure full consistency (optional but safe)
-      // small delay to let DB settle
-      setTimeout(() => fetchOrders(), 400);
-
-      return data || true;
-    } catch (err) {
-      console.error("❌ Failed to update order:", err);
-      toast.error("Could not update order status. Please try again.");
+      setTimeout(fetchOrders, 300);
+      return data;
+    } catch {
+      toast.error(t("orders_update_error"));
       return null;
     } finally {
       setUpdatingId(null);
     }
   };
 
-  // Cancel order confirmation using toast.custom (with proper async button handlers)
+  // CONFIRMATION POPUPS
   const cancelOrder = (id) => {
     toast.dismiss();
     toast.custom(
-      (t) => (
-        <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-200 max-w-sm">
-          <p className="font-semibold text-gray-800 mb-3">Cancel this order?</p>
-          <div className="flex justify-end gap-2">
+      (tObj) => (
+        <div className="bg-white rounded-xl p-4 shadow-xl border border-gray-200">
+          <p className="font-semibold mb-3">{t("cancel_confirm")}</p>
+
+          <div className="flex justify-end gap-3">
             <button
-              type="button"
               onClick={async () => {
-                // disable toast while processing by dismissing it, then run update
-                toast.dismiss(t.id);
+                toast.dismiss(tObj.id);
                 await updateOrderStatus(id, "cancelled");
               }}
-              className="px-4 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
+              className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
             >
-              Yes
+              {t("yes")}
             </button>
+
             <button
-              type="button"
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black"
+              onClick={() => toast.dismiss(tObj.id)}
+              className="px-4 py-1 bg-gray-200 hover:bg-gray-300 text-black rounded-md"
             >
-              No
+              {t("no")}
             </button>
           </div>
         </div>
       ),
-      { position: "top-center", duration: 6000 }
+      { duration: 6000, position: "top-center" }
     );
   };
 
-  // Return order confirmation
   const returnOrder = (id) => {
     toast.dismiss();
     toast.custom(
-      (t) => (
-        <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-200 max-w-sm">
-          <p className="font-semibold text-gray-800 mb-3">Request a return?</p>
-          <div className="flex justify-end gap-2">
+      (tObj) => (
+        <div className="bg-white rounded-xl p-4 shadow-xl border border-gray-200">
+          <p className="font-semibold mb-3">{t("return_confirm")}</p>
+
+          <div className="flex justify-end gap-3">
             <button
-              type="button"
               onClick={async () => {
-                toast.dismiss(t.id);
+                toast.dismiss(tObj.id);
                 await updateOrderStatus(id, "returned");
               }}
-              className="px-4 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="px-4 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md"
             >
-              Yes
+              {t("yes")}
             </button>
+
             <button
-              type="button"
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black"
+              onClick={() => toast.dismiss(tObj.id)}
+              className="px-4 py-1 bg-gray-200 hover:bg-gray-300 rounded-md"
             >
-              No
+              {t("no")}
             </button>
           </div>
         </div>
       ),
-      { position: "top-center", duration: 6000 }
+      { duration: 6000, position: "top-center" }
     );
   };
 
-  // Generate PDF (unchanged logic, just toast on success/error)
+  // PDF GENERATOR (UNCHANGED)
   const generatePDF = async (order) => {
     setPdfGeneratingId(order.id);
     try {
@@ -203,21 +201,27 @@ export default function Orders() {
           reader.readAsDataURL(blob);
         });
         doc.addImage(base64, "PNG", pageWidth / 2 - 40, y, 80, 80);
-      } catch {
-        console.warn("⚠ Logo not loaded.");
-      }
+      } catch {}
 
       y += 95;
       doc.setFontSize(22);
       doc.setTextColor(185, 49, 79);
       doc.text("KL Stall & Decors", pageWidth / 2, y, { align: "center" });
+
       doc.setFontSize(12);
       doc.setTextColor(80, 80, 80);
-      doc.text("Your Event, Our Perfection!", pageWidth / 2, y + 18, { align: "center" });
+      doc.text("Your Event, Our Perfection!", pageWidth / 2, y + 18, {
+        align: "center",
+      });
+
       y += 50;
 
       const customerName =
-        profileName || order.name || session?.user?.user_metadata?.full_name || "Customer";
+        profileName ||
+        order.name ||
+        session?.user?.user_metadata?.full_name ||
+        "Customer";
+
       const customerEmail = session?.user?.email || "Not provided";
 
       doc.setFontSize(12);
@@ -226,16 +230,22 @@ export default function Orders() {
       doc.text(`Email: ${customerEmail}`, marginLeft, y + 18);
 
       y += 45;
+
       doc.text(`Order ID: ${order.id}`, marginLeft, y);
-      doc.text(`Payment Method: ${order.payment_method || "N/A"}`, marginLeft, y + 18);
-      doc.text(`Order Date: ${new Date(order.created_at).toLocaleString()}`, marginLeft, y + 36);
+      doc.text(`Payment Method: ${order.payment_method}`, marginLeft, y + 18);
+      doc.text(
+        `Order Date: ${new Date(order.created_at).toLocaleString()}`,
+        marginLeft,
+        y + 36
+      );
 
       let statusColor = [0, 0, 0];
       if (order.status === "cancelled") statusColor = [255, 0, 0];
       else if (order.status === "returned") statusColor = [255, 128, 0];
       else if (order.status === "completed") statusColor = [0, 150, 0];
+
       doc.setTextColor(...statusColor);
-      doc.text(`Order Status: ${order.status || "Pending"}`, marginLeft, y + 54);
+      doc.text(`Status: ${order.status}`, marginLeft, y + 54);
 
       y += 80;
 
@@ -244,18 +254,16 @@ export default function Orders() {
         items =
           typeof order.items === "string"
             ? JSON.parse(order.items)
-            : Array.isArray(order.items)
-            ? order.items
-            : [];
+            : order.items || [];
       } catch {
         items = [];
       }
 
       const tableBody = items.map((it, idx) => [
         it.title || it.name || `Item ${idx + 1}`,
-        it.qty || it.quantity || 1,
+        it.qty || 1,
         fmtPrice(it.price),
-        fmtPrice((it.price || 0) * (it.qty || it.quantity || 1)),
+        fmtPrice((it.price || 0) * (it.qty || 1)),
       ]);
 
       if (tableBody.length > 0) {
@@ -269,6 +277,7 @@ export default function Orders() {
       }
 
       const totalPrice = order.total_price || order.total || 0;
+
       doc.setFont("helvetica", "bold");
       doc.setTextColor(185, 49, 79);
       doc.text(`Grand Total: INR ${fmtPrice(totalPrice)}`, pageWidth - marginLeft, y, {
@@ -276,100 +285,110 @@ export default function Orders() {
       });
 
       y += 40;
+
       doc.setFontSize(10);
       doc.setTextColor(60, 60, 60);
       doc.text("Thank you for choosing KL Stall & Decors!", marginLeft, y);
       doc.text(`Phone: ${CONTACT_PHONE_1} | ${CONTACT_PHONE_2}`, marginLeft, y + 14);
       doc.text(`Email: ${CONTACT_EMAIL}`, marginLeft, y + 28);
 
-      doc.save(`Order_${String(order.id).slice(0, 10)}.pdf`);
-      toast.success("PDF downloaded successfully!");
-    } catch (err) {
-      console.error("❌ PDF generation failed:", err);
-      toast.error("Failed to generate PDF.");
-    } finally {
-      setPdfGeneratingId(null);
+      doc.save(`Order_${order.id}.pdf`);
+      toast.success(t("pdf_success"));
+    } catch {
+      toast.error(t("pdf_failed"));
     }
+
+    setPdfGeneratingId(null);
   };
 
+  // MAIN UI
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-[#FFF5F9] px-4 py-10">
+    <div className={`min-h-screen w-full flex flex-col items-center px-4 py-10 ${pageBg}`}>
       <Toaster position="top-center" />
-      <h1 className="text-3xl md:text-4xl font-bold text-[#b9314f] mb-8 text-center">
-        📦 My Orders
+
+      {/* TITLE */}
+      <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
+        📦 {t("my_orders")}
       </h1>
 
+      {/* LOADING */}
       {loading ? (
-        <div className="text-lg text-gray-600 animate-pulse">Loading orders...</div>
+        <p className="text-lg opacity-80 animate-pulse">{t("loading_orders")}</p>
       ) : orders.length === 0 ? (
-        <p className="text-gray-700 text-lg">No orders yet. Start shopping now!</p>
+        <p className="text-lg opacity-80">{t("no_orders")}</p>
       ) : (
-        <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg p-6 space-y-6">
+        <div className={`w-full max-w-5xl rounded-3xl p-6 space-y-6 ${cardClass}`}>
           {orders.map((order) => (
             <div
               key={order.id}
-              className="border-b pb-5 last:border-none flex flex-col md:flex-row md:justify-between md:items-center"
+              className="pb-6 border-b border-pink-200/30 last:border-none flex flex-col md:flex-row justify-between gap-4"
             >
+              {/* LEFT */}
               <div>
-                <h2 className="text-lg font-semibold text-[#b9314f]">Order ID: {order.id}</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-lg font-bold text-[#b9314f]">
+                  {t("order_id")}: {order.id}
+                </h2>
+
+                <p className="text-sm opacity-80">
                   {new Date(order.created_at).toLocaleString()}
                 </p>
-                <p className="text-sm mt-1">
-                  Payment: <span className="font-medium">{order.payment_method || "N/A"}</span>
+
+                <p className="mt-1 text-sm">
+                  {t("payment")}:{" "}
+                  <span className="font-semibold">{order.payment_method}</span>
                 </p>
-                <p className="font-bold mt-1 text-gray-900">
-                  Total: INR {fmtPrice(order.total_price || order.total)}
+
+                <p className="font-bold mt-1">
+                  {t("total")}: ₹ {fmtPrice(order.total_price || order.total)}
                 </p>
-                <p
-                  className={`mt-1 text-sm font-semibold ${
-                    order.status === "cancelled"
-                      ? "text-red-600"
-                      : order.status === "returned"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  Status: {order.status || "Pending"}
+
+                <p className={`mt-1 text-sm ${statusText(order.status)}`}>
+                  {t("status")}: {order.status}
                 </p>
               </div>
 
-              <div className="mt-4 md:mt-0 flex items-center gap-3">
+              {/* RIGHT BUTTONS */}
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                {/* PDF BUTTON */}
                 <button
                   onClick={() => generatePDF(order)}
                   disabled={pdfGeneratingId === order.id}
-                  className={`px-5 py-2 rounded-lg font-medium text-white transition-all ${
+                  className={`min-w-[130px] px-4 py-2 rounded-md text-white font-semibold shadow transition ${
                     pdfGeneratingId === order.id
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-[#b9314f] hover:bg-[#ff7a9e]"
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-[#b9314f] hover:bg-[#ff7aa2]"
                   }`}
                 >
-                  {pdfGeneratingId === order.id ? "Generating..." : "⬇ Download PDF"}
+                  {pdfGeneratingId === order.id ? t("generating") : t("download_pdf")}
                 </button>
 
+                {/* CANCEL BUTTON */}
                 {order.status !== "cancelled" && order.status !== "returned" && (
                   <button
                     onClick={() => cancelOrder(order.id)}
                     disabled={updatingId === order.id}
-                    className={`px-4 py-2 rounded-lg text-white ${
-                      updatingId === order.id ? "bg-gray-400 cursor-not-allowed" : "bg-gray-500 hover:bg-gray-600"
+                    className={`min-w-[110px] px-4 py-2 rounded-md text-white transition ${
+                      updatingId === order.id
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-gray-600 hover:bg-gray-700"
                     }`}
-                    type="button"
                   >
-                    {updatingId === order.id ? "Processing..." : "❌ Cancel"}
+                    {updatingId === order.id ? t("processing") : t("cancel")}
                   </button>
                 )}
 
+                {/* RETURN BUTTON */}
                 {order.status === "completed" && (
                   <button
                     onClick={() => returnOrder(order.id)}
                     disabled={updatingId === order.id}
-                    className={`px-4 py-2 rounded-lg text-white ${
-                      updatingId === order.id ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
+                    className={`min-w-[110px] px-4 py-2 rounded-md text-white transition ${
+                      updatingId === order.id
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-yellow-600 hover:bg-yellow-700"
                     }`}
-                    type="button"
                   >
-                    {updatingId === order.id ? "Processing..." : "🔄 Return"}
+                    {updatingId === order.id ? t("processing") : t("return")}
                   </button>
                 )}
               </div>

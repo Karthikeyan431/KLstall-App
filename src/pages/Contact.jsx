@@ -1,184 +1,188 @@
 // src/pages/Contact.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
-import { FaInstagram, FaFacebook, FaWhatsapp, FaCheckCircle } from "react-icons/fa";
+import { supabase } from "../lib/supabase";
+import { ThemeContext } from "../contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 export default function Contact() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
+
+  // Form states
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Theme UI Classes
+  const pageBg =
+    theme === "dark"
+      ? "bg-[#0f0f0f] text-white"
+      : "bg-gradient-to-b from-[#FFF5F9] via-[#FFE4EC] to-[#FFF5F9] text-[#1a1a1a]";
 
+  const cardBg =
+    theme === "dark"
+      ? "bg-[#1A1A1A] border border-[#FF66C4]/40"
+      : "bg-white border border-[#FF66C4]/20";
+
+  const inputBg =
+    theme === "dark"
+      ? "bg-[#2A2A2A] text-white border border-[#FF66C4]/30"
+      : "bg-white text-black border border-[#FF66C4]/30";
+
+  const buttonPrimary =
+    theme === "dark"
+      ? "bg-[#FF66C4] hover:bg-[#ff4aad] text-white"
+      : "bg-gradient-to-r from-[#FF66C4] to-[#FFDE59] text-white";
+
+  // Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setSuccess(false);
+    setSuccessMsg("");
 
-    try {
-      const res = await fetch("http://localhost:5000/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    const { error } = await supabase.from("contact_form").insert([
+      {
+        name,
+        phone,
+        message,
+      },
+    ]);
 
-      if (res.ok) {
-        toast.success("✅ Message sent successfully!");
-        setFormData({ name: "", email: "", message: "" });
-        setSuccess(true);
-      } else {
-        toast.error("❌ Failed to send message. Try again!");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("⚠️ Something went wrong. Try again!");
-    } finally {
-      setLoading(false);
-      setTimeout(() => setSuccess(false), 3000);
+    if (error) {
+      setSuccessMsg(t("contact_error"));
+    } else {
+      setSuccessMsg(t("contact_success"));
+      setName("");
+      setPhone("");
+      setMessage("");
     }
+    setLoading(false);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="relative min-h-screen flex flex-col items-center justify-center
-                 bg-gradient-to-br from-yellow-50 via-pink-50 to-yellow-100 px-6 py-10"
-    >
-      <Toaster position="top-center" />
+    <div className={`min-h-screen w-full px-4 py-10 flex flex-col items-center ${pageBg}`}>
+      {/* Title */}
+      <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
+        {t("contact_us")}
+      </h1>
 
-      {/* Background Glow Animation */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute w-96 h-96 bg-yellow-300 opacity-20 rounded-full blur-3xl"
-      />
+      <p className="text-center max-w-2xl opacity-80 mb-10">
+        {t("contact_subtitle") ||
+          "We’re here to help! Reach us anytime for bookings, decorations, events or stall services."}
+      </p>
 
-      {/* Contact Card */}
-      <div className="relative z-10 bg-white/70 backdrop-blur-xl shadow-2xl
-                      rounded-3xl border border-yellow-100 max-w-md w-full p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-700 mb-6">
-          Contact Us
-        </h2>
+      {/* Contact Form + Info */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8">
 
-        {/* Success Check Animation */}
-        {success && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-            className="flex justify-center mb-4"
-          >
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </motion.div>
-        )}
+        {/* Contact Form */}
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl p-6 shadow-xl ${cardBg}`}
+        >
+          <h2 className="text-2xl font-bold mb-4 text-[#b9314f]">
+            {t("send_message") || "Send us a message"}
+          </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Your Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2
-                       focus:ring-yellow-400 outline-none"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Your Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2
-                       focus:ring-yellow-400 outline-none"
-          />
-          <textarea
-            name="message"
-            placeholder="Your Message"
-            value={formData.message}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border border-gray-200 rounded-xl h-32 resize-none
-                       focus:ring-2 focus:ring-yellow-400 outline-none"
-          ></textarea>
+          <div className="flex flex-col gap-4">
+            <input
+              type="text"
+              placeholder={t("your_name") || "Your Name"}
+              className={`w-full p-3 rounded-lg ${inputBg}`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 rounded-xl text-white font-bold transition
-                        ${loading ? "bg-yellow-300 cursor-wait" : "bg-yellow-400 hover:bg-yellow-500"}`}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="w-5 h-5 animate-spin text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-                Sending...
-              </span>
-            ) : (
-              "Send Message"
+            <input
+              type="number"
+              placeholder={t("your_phone") || "Your Phone Number"}
+              className={`w-full p-3 rounded-lg ${inputBg}`}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+
+            <textarea
+              rows={4}
+              placeholder={t("your_message") || "Write your message"}
+              className={`w-full p-3 rounded-lg resize-none ${inputBg}`}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+            />
+
+            {successMsg && (
+              <p className="text-green-500 font-semibold text-sm">{successMsg}</p>
             )}
-          </button>
-        </form>
 
-        {/* Contact Info */}
-        <div className="mt-8 text-center text-gray-600 text-sm space-y-1">
-          <p>📧 klstall.decors@gmail.com</p>
-          <p>📞 +91 95660 61075</p>
-          <p>📍 Thirukkazhukundram, India</p>
-        </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 rounded-full font-semibold shadow-md ${buttonPrimary}`}
+            >
+              {loading
+                ? t("sending") || "Sending..."
+                : t("send_now") || "Send Message"}
+            </button>
+          </div>
+        </motion.form>
 
-        {/* Social Links with Animation */}
-        <div className="flex justify-center gap-6 mt-5 text-2xl text-yellow-500">
-          <motion.a
-            href="https://www.instagram.com/kl_stall.decors?igsh=eTNnOTRlMWk0MWRr"
-            whileHover={{ scale: 1.3, rotate: 5, color: "#eab308" }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="hover:drop-shadow-md"
-          >
-            <FaInstagram />
-          </motion.a>
-          <motion.a
-            href="https://www.facebook.com/share/1J2tTsSBn9/"
-            whileHover={{ scale: 1.3, rotate: -5, color: "#1877F2" }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="hover:drop-shadow-md"
-          >
-            <FaFacebook />
-          </motion.a>
-          <motion.a
-            href="https://wa.me/919566061075?text=Hi%2C%20I%27m%20interested%20in%20your%20service."
-            whileHover={{ scale: 1.3, rotate: 3, color: "#25D366" }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="hover:drop-shadow-md"
-          >
-            <FaWhatsapp />
-          </motion.a>
-        </div>
+        {/* Right Side Info */}
+        <motion.div
+          initial={{ opacity: 0, x: 25 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          className={`rounded-2xl p-6 shadow-xl ${cardBg}`}
+        >
+          <h2 className="text-2xl font-bold text-[#b9314f] mb-4">
+            {t("contact_details") || "Contact Details"}
+          </h2>
+
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="font-semibold">📍 {t("office_location")}</p>
+              <p className="opacity-80">Thirukkazhukundram, Chengalpattu</p>
+            </div>
+
+            <div>
+              <p className="font-semibold">📞 {t("phone")}</p>
+              <p className="opacity-80">+91 95660 61075</p>
+              <p className="opacity-80">+91 82205 84194</p>
+            </div>
+
+            <div>
+              <p className="font-semibold">📧 {t("email")}</p>
+              <p className="opacity-80">klstall.decors@gmail.com</p>
+            </div>
+
+            <div>
+              <p className="font-semibold">🌐 {t("social_links")}</p>
+              <a
+                href="https://wa.me/919566061075"
+                target="_blank"
+                className="block text-green-500 underline"
+              >
+                WhatsApp Chat
+              </a>
+            </div>
+
+            <div>
+              <p className="font-semibold mb-2">📌 {t("view_on_maps")}</p>
+              <a
+                href="https://maps.app.goo.gl/UE13u5D3xxU7y7iL6"
+                target="_blank"
+                className="text-blue-500 underline"
+              >
+                Open in Google Maps
+              </a>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </motion.div>
+    </div>
   );
 }

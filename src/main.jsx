@@ -1,17 +1,31 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client'; // ✅ use only createRoot
-import './index.css';
-import './responsive-fix.css';
-import App from './App.jsx';
-import { AuthProvider } from './contexts/AuthContext';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import "./responsive-fix.css";
+import "./i18n";
+import App from "./App.jsx";
+
+import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 
-const root = createRoot(document.getElementById('root')); // create root
+// THE TWO CONTEXTS WE USE
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { PreferencesProvider } from "./contexts/PreferencesContext";
+
+const root = createRoot(document.getElementById("root"));
+
 root.render(
   <StrictMode>
     <AuthProvider>
       <CartProvider>
-       <App />
+        {/* Global Theme & Preferences */}
+        <ThemeProvider>
+          <PreferencesProvider>
+
+            <App />
+
+          </PreferencesProvider>
+        </ThemeProvider>
       </CartProvider>
     </AuthProvider>
   </StrictMode>

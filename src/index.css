@@ -106,3 +106,46 @@ html, body {
     animation: pulse-glow 1.5s infinite;
   }
 }
+.input {
+  @apply border rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:border-gray-700;
+}
+
+.lang-btn {
+  @apply px-3 py-1.5 text-sm rounded-full border dark:bg-gray-700 dark:border-gray-600;
+}
+
+.lang-active {
+  @apply bg-gradient-to-r from-[#FF66C4] to-[#FFDE59] text-white border-none;
+}
+html {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body {
+  background-color: #FFF5F9;
+  color: #1a1a1a;
+}
+
+html.dark body {
+  background-color: #0D0D0D;
+  color: #f2f2f2;
+}
+
+.card {
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+
+html.dark .card {
+  background-color: #1A1A1A !important;
+  color: #f2f2f2 !important;
+}
+
+html.dark input, html.dark textarea, html.dark select {
+  background-color: #222 !important;
+  color: #fff !important;
+  border-color: #FF66C4 !important;
+}
+
+html.dark button {
+  color: #fff !important;
+}

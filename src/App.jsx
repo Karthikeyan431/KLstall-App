@@ -1,68 +1,77 @@
 // src/App.jsx
-import React from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
 
-import Navbar from "./components/Navbar";
+import React, { useContext } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./i18n";
+
+// Pages
+import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
-import Packages from "./pages/Packages";
-import AdminPackages from "./pages/AdminPackages";
-import Cart from "./pages/Cart";
-import DebugAuth from "./pages/DebugAuth";
-import AdminRoute from "./components/AdminRoute";
-import AdminPage from "./pages/AdminPage";
-import Home from "./pages/Home";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
+import Profile from "./pages/Profile";
+import Packages from "./pages/Packages";
+import Cart from "./pages/Cart";
 import Dashboard from "./pages/Dashboard";
-import Contact from "./pages/Contact";
 import Orders from "./pages/Orders";
+import Settings from "./pages/Settings";
+import Contact from "./pages/Contact";
+import AdminPackages from "./pages/AdminPackages";
+import AdminPage from "./pages/AdminPage";
+import DebugAuth from "./pages/DebugAuth";
+
+// Components
+import Navbar from "./components/Navbar";
+import AdminRoute from "./components/AdminRoute";
+import ChatWidget from "./components/ChatWidget";   // ⭐ Chatbot added
+
+// Providers
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { PreferencesProvider } from "./contexts/PreferencesContext";
+import { ThemeContext } from "./contexts/ThemeContext";
+import { PreferencesContext } from "./contexts/PreferencesContext";
+
+// Toast
 import { Toaster } from "react-hot-toast";
 
-// ✅ Floating chatbot component
-import FloatingChatbot from "./components/FloatingChatbot";
-
-// ✅ Inner component to use `useLocation` inside BrowserRouter
 function AppContent() {
-  const location = useLocation();
-
-  // Pages where chatbot should be hidden
-  const hideChatPages = [
-    "/login",
-    "/signup",
-    "/reset-password",
-    "/update-password",
-  ];
+  const { theme } = useContext(ThemeContext);
+  const { prefs } = useContext(PreferencesContext);
 
   return (
     <div
-      className="min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{
-        background:
-          "linear-gradient(135deg, #FFDEE9 0%, #FFE3B3 50%, #FFF5F9 100%)",
-        margin: 0,
-        padding: 0,
-        border: "none",
-      }}
+      className={`min-h-screen w-full flex flex-col overflow-x-hidden transition ${
+        theme === "dark"
+          ? "dark bg-[#0f0f0f] text-white"
+          : "bg-[#FFF3EC] text-[#1a1a1a]"
+      }`}
     >
-      {/* ✅ Global Navbar */}
+      {/* Navbar */}
       <Navbar />
 
-      {/* ✅ Main content area */}
-      <main className="flex-1 pt-16 w-full overflow-hidden">
+      {/* PAGES */}
+      <main className="flex-1 pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
+
+          {/* Auth */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+
+          {/* User Pages */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/packages" element={<Packages />} />
-          <Route path="/admin-packages" element={<AdminPackages />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/contact" element={<Contact />} />
+
+          {/* Admin */}
           <Route
             path="/admin"
             element={
@@ -71,31 +80,31 @@ function AppContent() {
               </AdminRoute>
             }
           />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/admin-packages" element={<AdminPackages />} />
+
+          {/* Debug */}
           <Route path="/debug-auth" element={<DebugAuth />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/contact" element={<Contact />} />
         </Routes>
 
-        {/* ✅ Floating Chatbot on all pages except hidden ones */}
-        {!hideChatPages.includes(location.pathname) && <FloatingChatbot />}
-
-        {/* ✅ Global Toast Notifications */}
         <Toaster position="top-center" />
       </main>
+
+      {/* ⭐ AI CHATBOT ALWAYS ON SCREEN */}
+      <ChatWidget />
     </div>
   );
 }
 
-// ✅ Root wrapper (BrowserRouter)
 export default function App() {
-  console.log("✅ App is rendering...");
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <PreferencesProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </PreferencesProvider>
+      </ThemeProvider>
+    </I18nextProvider>
   );
 }

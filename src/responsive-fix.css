@@ -26,7 +26,6 @@ svg {
 }
 #root {
   width: 100%;
-  max-width: 1280px; /* keep your existing maximum width */
   margin: 0 auto;
   padding-left: var(--safe-h-padding);
   padding-right: var(--safe-h-padding);
