@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet-async";
 
 export default function Signup() {
   const { t } = useTranslation();
@@ -75,6 +76,14 @@ export default function Signup() {
       : "bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-200 text-slate-900";
 
   return (
+   <>
+    <Helmet>
+  <title>Sign Up | KL Stall</title>
+  <meta
+    name="description"
+    content="Create your KL Stall account to start managing orders, packages, customers, and sales efficiently from one dashboard."
+  />
+</Helmet>
     <div
       className={`min-h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden ${pageBg}`}
     >
@@ -183,5 +192,6 @@ export default function Signup() {
         </div>
       </motion.div>
     </div>
+   </>
   );
 }

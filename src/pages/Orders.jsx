@@ -1,188 +1,175 @@
 // src/pages/Orders.jsx
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../contexts/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
 
-// CONSTANTS (UNCHANGED)
+/* ---------------- CONSTANTS ---------------- */
 const LOGO_URL =
   "https://i.ibb.co/qMw20Rfy/IMG-20250917-214439-removebg-preview.png";
-const CONTACT_PHONE_1 = "9566061075";
-const CONTACT_PHONE_2 = "8220584194";
+const CONTACT_PHONE = "9566061075 / 8220584194";
 const CONTACT_EMAIL = "klstall.decors@gmail.com";
 
 export default function Orders() {
-  const { session } = useAuth();
-  const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
 
-  // STATES
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pdfGeneratingId, setPdfGeneratingId] = useState(null);
-  const [profileName, setProfileName] = useState("");
-  const [updatingId, setUpdatingId] = useState(null);
+  const [pdfId, setPdfId] = useState(null);
+  const [actionId, setActionId] = useState(null);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
 
-  // THEME CLASSES
+  /* ---------------- THEME ---------------- */
   const pageBg =
     theme === "dark"
       ? "bg-[#0f0f0f] text-white"
       : "bg-gradient-to-b from-[#FFF5F9] to-[#FFE4EC] text-[#1a1a1a]";
 
-  const cardClass =
+  const card =
     theme === "dark"
-      ? "bg-[#1A1A1A] text-white border border-[#FF66C4]/40 shadow-xl"
-      : "bg-white text-black border border-[#FF66C4]/20 shadow-xl";
+      ? "bg-[#1A1A1A] border border-[#FF66C4]/30"
+      : "bg-white border border-[#FF66C4]/20";
 
-  const statusText = (status) => {
-    if (status === "cancelled") return "text-red-500 font-semibold";
-    if (status === "returned") return "text-yellow-600 font-semibold";
-    return "text-green-600 font-semibold";
-  };
-
-  // LOAD PROFILE + ORDERS
+  /* ---------------- LOAD DATA ---------------- */
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchProfileName();
-      fetchOrders();
-    }
-  }, [session]);
+    const load = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) return;
 
-  const fetchProfileName = async () => {
-    try {
-      const { data } = await supabase
+      setUser(data.user);
+
+      const { data: prof } = await supabase
         .from("profiles")
         .select("full_name")
-        .eq("id", session.user.id)
+        .eq("id", data.user.id)
         .single();
 
-      setProfileName(data?.full_name || "");
-    } catch {}
-  };
+      setProfile(prof);
+      await refreshOrders(data.user.id);
+      setLoading(false);
+    };
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
+    load();
+  }, []);
 
-      setOrders(data || []);
-    } catch {
-      toast.error(t("orders_load_error"));
+  const refreshOrders = async (uid) => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      toast.error("Failed to load orders");
+      return;
     }
-    setLoading(false);
+    setOrders(data || []);
   };
 
-  const fmtPrice = (v) => Number(v || 0).toFixed(2);
+  /* ---------------- HELPERS ---------------- */
+  const money = (v) => `₹ ${Number(v || 0).toLocaleString("en-IN")}`;
 
-  // UPDATE ORDER STATUS
-  const updateOrderStatus = async (id, newStatus) => {
-    setUpdatingId(id);
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .eq("user_id", session.user.id)
-        .select()
-        .single();
+  const statusBadge = (status) => {
+    const map = {
+      pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      completed: "bg-green-100 text-green-800 border-green-200",
+      cancelled: "bg-red-100 text-red-800 border-red-200",
+      refunded: "bg-purple-100 text-purple-800 border-purple-200",
+    };
+    return map[String(status || "").toLowerCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+  };
 
-      if (error) return toast.error(error.message || t("orders_update_error"));
+  const paymentBadge = (status) => {
+    const s = String(status || "").toLowerCase();
+    if (s === "paid" || s === "success") return "bg-green-100 text-green-800 border-green-200";
+    if (s === "unpaid" || s === "pending") return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    if (s === "refunded") return "bg-purple-100 text-purple-800 border-purple-200";
+    return "bg-gray-100 text-gray-700 border-gray-200";
+  };
 
-      setOrders((prev) => prev.map((o) => (o.id === id ? data : o)));
+  const canCancel = (order) => {
+    const st = String(order?.status || "").toLowerCase();
+    // Allow cancel only if not already cancelled
+    return st !== "cancelled";
+  };
 
-      toast.success(
-        newStatus === "cancelled"
-          ? t("order_cancelled")
-          : newStatus === "returned"
-          ? t("order_returned")
-          : t("order_updated")
-      );
+  const isOnlinePaid = (order) => {
+    const method = String(order?.payment_method || "").toLowerCase();
+    const payStatus = String(order?.payment_status || "").toLowerCase();
+    // online + paid => refund
+    return method !== "cod" && (payStatus === "paid" || payStatus === "success");
+  };
 
-      setTimeout(fetchOrders, 300);
-      return data;
-    } catch {
-      toast.error(t("orders_update_error"));
-      return null;
-    } finally {
-      setUpdatingId(null);
+  /* ---------------- CANCEL / REFUND (FIXED) ---------------- */
+  const cancelOrder = async (order) => {
+  const confirmMsg =
+    order.payment_method === "COD"
+      ? "Cancel this Cash on Delivery order?"
+      : "Cancel this order and refund the amount?";
+
+  if (!window.confirm(confirmMsg)) return;
+
+  setActionId(order.id);
+
+  try {
+    // ✅ Get session safely
+    const { data: sessionData, error: sessionErr } =
+      await supabase.auth.getSession();
+
+    if (sessionErr) throw sessionErr;
+
+    const accessToken = sessionData?.session?.access_token;
+
+    if (!accessToken) {
+      toast.error("Session expired. Please login again.");
+      return;
     }
-  };
 
-  // CONFIRMATION POPUPS
-  const cancelOrder = (id) => {
-    toast.dismiss();
-    toast.custom(
-      (tObj) => (
-        <div className="bg-white rounded-xl p-4 shadow-xl border border-gray-200">
-          <p className="font-semibold mb-3">{t("cancel_confirm")}</p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={async () => {
-                toast.dismiss(tObj.id);
-                await updateOrderStatus(id, "cancelled");
-              }}
-              className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
-            >
-              {t("yes")}
-            </button>
-
-            <button
-              onClick={() => toast.dismiss(tObj.id)}
-              className="px-4 py-1 bg-gray-200 hover:bg-gray-300 text-black rounded-md"
-            >
-              {t("no")}
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 6000, position: "top-center" }
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancelOrderAndRefund`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          order_id: order.id,
+          user_id: user.id,
+        }),
+      }
     );
-  };
 
-  const returnOrder = (id) => {
-    toast.dismiss();
-    toast.custom(
-      (tObj) => (
-        <div className="bg-white rounded-xl p-4 shadow-xl border border-gray-200">
-          <p className="font-semibold mb-3">{t("return_confirm")}</p>
+    const data = await res.json();
 
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={async () => {
-                toast.dismiss(tObj.id);
-                await updateOrderStatus(id, "returned");
-              }}
-              className="px-4 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md"
-            >
-              {t("yes")}
-            </button>
+    if (!res.ok) {
+      console.error("Cancel API Error:", data);
+      throw new Error(data?.error || "Cancel failed");
+    }
 
-            <button
-              onClick={() => toast.dismiss(tObj.id)}
-              className="px-4 py-1 bg-gray-200 hover:bg-gray-300 rounded-md"
-            >
-              {t("no")}
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 6000, position: "top-center" }
+    toast.success(
+      order.payment_method === "COD"
+        ? "Order cancelled successfully"
+        : "Order cancelled & refund initiated"
     );
-  };
 
-  // PDF GENERATOR (UNCHANGED)
+    await refreshOrders(user.id);
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message || "Unable to cancel order");
+  } finally {
+    setActionId(null);
+  }
+};
+  /* ---------------- PDF INVOICE ---------------- */
   const generatePDF = async (order) => {
-    setPdfGeneratingId(order.id);
+    setPdfId(order.id);
+
     try {
       const { jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
@@ -192,210 +179,251 @@ export default function Orders() {
       const marginLeft = 40;
       let y = 40;
 
+      /* LOGO */
       try {
         const res = await fetch(LOGO_URL);
         const blob = await res.blob();
         const reader = new FileReader();
-        const base64 = await new Promise((resolve) => {
-          reader.onloadend = () => resolve(reader.result);
+        const base64 = await new Promise((r) => {
+          reader.onloadend = () => r(reader.result);
           reader.readAsDataURL(blob);
         });
-        doc.addImage(base64, "PNG", pageWidth / 2 - 40, y, 80, 80);
+        doc.addImage(base64, "PNG", pageWidth / 2 - 35, y, 70, 70);
       } catch {}
 
       y += 95;
-      doc.setFontSize(22);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
       doc.setTextColor(185, 49, 79);
       doc.text("KL Stall & Decors", pageWidth / 2, y, { align: "center" });
 
-      doc.setFontSize(12);
-      doc.setTextColor(80, 80, 80);
-      doc.text("Your Event, Our Perfection!", pageWidth / 2, y + 18, {
-        align: "center",
-      });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(90, 90, 90);
+      doc.text("INVOICE", pageWidth / 2, y + 18, { align: "center" });
 
-      y += 50;
+      y += 45;
 
-      const customerName =
-        profileName ||
-        order.name ||
-        session?.user?.user_metadata?.full_name ||
-        "Customer";
-
-      const customerEmail = session?.user?.email || "Not provided";
-
-      doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      doc.text(`Customer: ${customerName}`, marginLeft, y);
-      doc.text(`Email: ${customerEmail}`, marginLeft, y + 18);
+      doc.setFontSize(11);
+
+      doc.text(`Customer: ${profile?.full_name || order?.name || "Customer"}`, marginLeft, y);
+      doc.text(`Email: ${user?.email || "-"}`, marginLeft, y + 16);
 
       y += 45;
 
       doc.text(`Order ID: ${order.id}`, marginLeft, y);
-      doc.text(`Payment Method: ${order.payment_method}`, marginLeft, y + 18);
-      doc.text(
-        `Order Date: ${new Date(order.created_at).toLocaleString()}`,
-        marginLeft,
-        y + 36
-      );
+      doc.text(`Date: ${new Date(order.created_at).toLocaleString()}`, marginLeft, y + 16);
+      doc.text(`Payment: ${order.payment_method}`, marginLeft, y + 32);
+      doc.text(`Payment Status: ${order.payment_status}`, marginLeft, y + 48);
 
-      let statusColor = [0, 0, 0];
-      if (order.status === "cancelled") statusColor = [255, 0, 0];
-      else if (order.status === "returned") statusColor = [255, 128, 0];
-      else if (order.status === "completed") statusColor = [0, 150, 0];
+      y += 70;
 
-      doc.setTextColor(...statusColor);
-      doc.text(`Status: ${order.status}`, marginLeft, y + 54);
+      const items =
+        typeof order.items === "string"
+          ? JSON.parse(order.items)
+          : order.items || [];
 
-      y += 80;
+      autoTable(doc, {
+        startY: y,
+        head: [["Item", "Qty", "Price", "Total"]],
+        body: items.map((i) => [
+          i.title || i.name || "Item",
+          i.qty || 1,
+          money(i.price),
+          money((i.price || 0) * (i.qty || 1)),
+        ]),
+        margin: { left: marginLeft, right: marginLeft },
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [185, 49, 79] },
+      });
 
-      let items = [];
-      try {
-        items =
-          typeof order.items === "string"
-            ? JSON.parse(order.items)
-            : order.items || [];
-      } catch {
-        items = [];
-      }
-
-      const tableBody = items.map((it, idx) => [
-        it.title || it.name || `Item ${idx + 1}`,
-        it.qty || 1,
-        fmtPrice(it.price),
-        fmtPrice((it.price || 0) * (it.qty || 1)),
-      ]);
-
-      if (tableBody.length > 0) {
-        autoTable(doc, {
-          startY: y,
-          head: [["Item", "Qty", "Price", "Total"]],
-          body: tableBody,
-          margin: { left: marginLeft, right: marginLeft },
-        });
-        y = doc.lastAutoTable.finalY + 20;
-      }
-
-      const totalPrice = order.total_price || order.total || 0;
+      y = doc.lastAutoTable.finalY + 20;
 
       doc.setFont("helvetica", "bold");
       doc.setTextColor(185, 49, 79);
-      doc.text(`Grand Total: INR ${fmtPrice(totalPrice)}`, pageWidth - marginLeft, y, {
-        align: "right",
-      });
+      doc.text(`Subtotal: ${money(order.total)}`, marginLeft, y);
+
+      if (order.discount_applied) {
+        y += 16;
+        doc.text(`Discount: -${money(order.discount_amount)}`, marginLeft, y);
+      }
+
+      y += 22;
+      doc.setFontSize(13);
+      doc.text(
+        `Final Total: ${money(order.final_total || order.total)}`,
+        marginLeft,
+        y
+      );
 
       y += 40;
-
-      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
-      doc.text("Thank you for choosing KL Stall & Decors!", marginLeft, y);
-      doc.text(`Phone: ${CONTACT_PHONE_1} | ${CONTACT_PHONE_2}`, marginLeft, y + 14);
-      doc.text(`Email: ${CONTACT_EMAIL}`, marginLeft, y + 28);
+      doc.setFontSize(10);
+      doc.text(`Contact: ${CONTACT_PHONE}`, marginLeft, y);
+      doc.text(`Email: ${CONTACT_EMAIL}`, marginLeft, y + 14);
 
-      doc.save(`Order_${order.id}.pdf`);
-      toast.success(t("pdf_success"));
+      doc.save(`KL_Invoice_${order.id}.pdf`);
+      toast.success("Invoice downloaded");
     } catch {
-      toast.error(t("pdf_failed"));
+      toast.error("Invoice generation failed");
     }
 
-    setPdfGeneratingId(null);
+    setPdfId(null);
   };
 
-  // MAIN UI
+  /* ---------------- UI DATA ---------------- */
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+  }, [orders]);
+
+  /* ---------------- UI ---------------- */
   return (
-    <div className={`min-h-screen w-full flex flex-col items-center px-4 py-10 ${pageBg}`}>
+    <>
+      <Helmet>
+        <title>My Orders | KL Stall</title>
+      </Helmet>
+
       <Toaster position="top-center" />
 
-      {/* TITLE */}
-      <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
-        📦 {t("my_orders")}
-      </h1>
+      <div className={`min-h-screen px-4 py-10 ${pageBg}`}>
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
+            📦 My Orders
+          </h1>
 
-      {/* LOADING */}
-      {loading ? (
-        <p className="text-lg opacity-80 animate-pulse">{t("loading_orders")}</p>
-      ) : orders.length === 0 ? (
-        <p className="text-lg opacity-80">{t("no_orders")}</p>
-      ) : (
-        <div className={`w-full max-w-5xl rounded-3xl p-6 space-y-6 ${cardClass}`}>
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="pb-6 border-b border-pink-200/30 last:border-none flex flex-col md:flex-row justify-between gap-4"
-            >
-              {/* LEFT */}
-              <div>
-                <h2 className="text-lg font-bold text-[#b9314f]">
-                  {t("order_id")}: {order.id}
-                </h2>
-
-                <p className="text-sm opacity-80">
-                  {new Date(order.created_at).toLocaleString()}
-                </p>
-
-                <p className="mt-1 text-sm">
-                  {t("payment")}:{" "}
-                  <span className="font-semibold">{order.payment_method}</span>
-                </p>
-
-                <p className="font-bold mt-1">
-                  {t("total")}: ₹ {fmtPrice(order.total_price || order.total)}
-                </p>
-
-                <p className={`mt-1 text-sm ${statusText(order.status)}`}>
-                  {t("status")}: {order.status}
-                </p>
-              </div>
-
-              {/* RIGHT BUTTONS */}
-              <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                {/* PDF BUTTON */}
-                <button
-                  onClick={() => generatePDF(order)}
-                  disabled={pdfGeneratingId === order.id}
-                  className={`min-w-[130px] px-4 py-2 rounded-md text-white font-semibold shadow transition ${
-                    pdfGeneratingId === order.id
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-[#b9314f] hover:bg-[#ff7aa2]"
-                  }`}
+          {loading ? (
+            <p className="text-center animate-pulse">Loading…</p>
+          ) : sortedOrders.length === 0 ? (
+            <p className="text-center opacity-70">No orders yet</p>
+          ) : (
+            <div className="space-y-6">
+              {sortedOrders.map((order) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`rounded-3xl p-6 shadow-xl ${card}`}
                 >
-                  {pdfGeneratingId === order.id ? t("generating") : t("download_pdf")}
-                </button>
+                  {/* Header */}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-[#b9314f]">
+                        Order #{order.id}
+                      </h2>
 
-                {/* CANCEL BUTTON */}
-                {order.status !== "cancelled" && order.status !== "returned" && (
-                  <button
-                    onClick={() => cancelOrder(order.id)}
-                    disabled={updatingId === order.id}
-                    className={`min-w-[110px] px-4 py-2 rounded-md text-white transition ${
-                      updatingId === order.id
-                        ? "bg-gray-500 cursor-not-allowed"
-                        : "bg-gray-600 hover:bg-gray-700"
-                    }`}
-                  >
-                    {updatingId === order.id ? t("processing") : t("cancel")}
-                  </button>
-                )}
+                      <p className="text-sm opacity-75 mt-1">
+                        {new Date(order.created_at).toLocaleString()}
+                      </p>
 
-                {/* RETURN BUTTON */}
-                {order.status === "completed" && (
-                  <button
-                    onClick={() => returnOrder(order.id)}
-                    disabled={updatingId === order.id}
-                    className={`min-w-[110px] px-4 py-2 rounded-md text-white transition ${
-                      updatingId === order.id
-                        ? "bg-gray-500 cursor-not-allowed"
-                        : "bg-yellow-600 hover:bg-yellow-700"
-                    }`}
-                  >
-                    {updatingId === order.id ? t("processing") : t("return")}
-                  </button>
-                )}
-              </div>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full border ${statusBadge(
+                            order.status
+                          )}`}
+                        >
+                          Order: {String(order.status || "pending").toUpperCase()}
+                        </span>
+
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full border ${paymentBadge(
+                            order.payment_status
+                          )}`}
+                        >
+                          Payment:{" "}
+                          {String(order.payment_status || "pending").toUpperCase()}
+                        </span>
+
+                        {order.refunded && (
+                          <span className="px-3 py-1 text-xs rounded-full border bg-purple-100 text-purple-800 border-purple-200">
+                            Refund: {String(order.refund_status || "pending").toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Refund details */}
+                      {order.refund_id && (
+                        <p className="text-xs opacity-70 mt-2">
+                          Refund ID: <span className="font-semibold">{order.refund_id}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-left md:text-right">
+                      <p className="text-xl font-extrabold">
+                        {money(order.final_total || order.total)}
+                      </p>
+
+                      <p className="text-sm opacity-75 mt-1">
+                        Method:{" "}
+                        <span className="font-semibold">
+                          {order.payment_method}{" "}
+                          {order.payment_type ? `(${order.payment_type})` : ""}
+                        </span>
+                      </p>
+
+                      {order.discount_applied && (
+                        <p className="text-green-600 text-sm mt-1">
+                          🎁 Coupon Applied (₹{order.discount_amount})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <button
+                      onClick={() => generatePDF(order)}
+                      disabled={pdfId === order.id}
+                      className={`px-4 py-2 rounded-xl font-semibold shadow-sm transition
+                        ${
+                          pdfId === order.id
+                            ? "bg-gray-400 text-white cursor-not-allowed"
+                            : "bg-[#b9314f] hover:bg-[#ff7aa2] text-white"
+                        }`}
+                    >
+                      {pdfId === order.id ? "Generating…" : "Download Invoice"}
+                    </button>
+
+                    {canCancel(order) && (
+                      <button
+                        onClick={() => cancelOrder(order)}
+                        disabled={actionId === order.id}
+                        className={`px-4 py-2 rounded-xl font-semibold shadow-sm transition
+                          ${
+                            actionId === order.id
+                              ? "bg-gray-400 text-white cursor-not-allowed"
+                              : "bg-red-600 hover:bg-red-700 text-white"
+                          }`}
+                      >
+                        {actionId === order.id
+                          ? "Processing…"
+                          : order.payment_method === "COD"
+                          ? "Cancel Order"
+                          : isOnlinePaid(order)
+                          ? "Cancel & Refund"
+                          : "Cancel Order"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  {order.notes && (
+                    <div className="mt-4 text-sm opacity-80">
+                      <span className="font-semibold">Note:</span> {order.notes}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

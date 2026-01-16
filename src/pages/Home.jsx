@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabase";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet-async";
 
 const logoSrc =
   "https://i.ibb.co/FkYCyrW1/IMG-20250917-214439-removebg-preview.png";
@@ -98,6 +99,15 @@ export default function Home() {
       : "px-6 sm:px-8 py-3 rounded-full text-lg font-semibold text-[#E84E64] border-2 border-[#E84E64] bg-white hover:bg-[#E84E64] hover:text-white transition";
 
   return (
+    <>
+      <Helmet>
+        <title>KL Stall | Smart Stall Management App</title>
+        <meta
+          name="description"
+          content="KL Stall is a smart web application for managing stalls, packages, orders, and customer interactions efficiently."
+        />
+      </Helmet>
+
     <div className={`min-h-screen w-full flex flex-col items-center ${pageBg}`}>
       {/* HERO */}
       <section className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-20 pb-8">
@@ -299,5 +309,6 @@ export default function Home() {
         </span>
       </footer>
     </div>
+   </>
   );
 }

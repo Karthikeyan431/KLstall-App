@@ -16,7 +16,7 @@ const resources = {
       dashboard: "Dashboard",
       orders: "Orders",
       features: "Features",
-
+      joined: "Joined",
       // hero
       hero_tagline: "Transforming events, inspiring memories",
       brand: "KL Stall & Decors",
@@ -97,6 +97,14 @@ const resources = {
       dark: "Dark",
       enabled: "Enabled",
       disabled: "Disabled",
+      edit_profile: "Edit Profile",
+      dashboard: "Dashboard",
+      delete_warning: "Delete Warning",
+      confirm_delete: "Confirm Delete",
+      about: "About",
+      rate_app: "Rate App",
+      privacy_policy: "Privacy Policy",
+      current_password: "Current Password",
 
       // login
       login_welcome_back: "Welcome Back!",
@@ -310,7 +318,7 @@ const resources = {
       hero_event_tail_after: "சேர்க்கப்படுகிறது ✨",
       view_packages: "பேக்கேஜ்களை காண்க",
       get_a_quote: "விலை மதிப்பீடு பெறுங்கள்",
-
+      joined: "சேர்ந்தார்",
       // why choose us
       why_title: "ஏன் எங்களை தேர்வு செய்ய வேண்டும்?",
       why_desc:
@@ -374,6 +382,14 @@ const resources = {
       dark: "இருள்",
       enabled: "இயக்கப்பட்டது",
       disabled: "முடக்கப்பட்டது",
+      edit_profile: "சுயவிவரத்தைத் திருத்து",
+      dashboard: "டாஷ்போர்டு",
+      delete_warning: "எச்சரிக்கையை நீக்கு ",
+      confirm_delete: "நீக்குவதை உறுதிப்படுத்தவும்",
+      about: "பற்றி",
+      rate_app: "பயன்பாட்டை மதிப்பிடு",
+      privacy_policy: "தனியுரிமைக் கொள்கை",
+      current_password: "தற்போதைய கடவுச்சொல்",
 
       // login
       login_welcome_back: "மீண்டும் வருக!",

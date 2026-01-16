@@ -197,6 +197,7 @@ export default function Navbar() {
             >
               {l.name}
             </Link>
+
           ))}
 
           {isAdmin && (

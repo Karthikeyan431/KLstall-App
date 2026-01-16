@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "../lib/supabase";
 import { ThemeContext } from "../contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
 
 export default function Contact() {
   const { theme } = useContext(ThemeContext);
@@ -63,6 +64,14 @@ export default function Contact() {
   };
 
   return (
+   <>
+    <Helmet>
+  <title>Contact Us | KL Stall</title>
+  <meta
+    name="description"
+    content="Get in touch with KL Stall for support, inquiries, or business assistance. We’re here to help you with orders, services, and account questions."
+  />
+</Helmet>
     <div className={`min-h-screen w-full px-4 py-10 flex flex-col items-center ${pageBg}`}>
       {/* Title */}
       <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
@@ -184,5 +193,6 @@ export default function Contact() {
         </motion.div>
       </div>
     </div>
+   </>
   );
 }

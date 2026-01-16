@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet-async";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -28,7 +29,7 @@ export default function Login() {
     });
 
     if (error) setError(error.message);
-    else navigate("/profile");
+    else navigate("/dashboard");
 
     setLoading(false);
   };
@@ -76,6 +77,14 @@ export default function Login() {
       : "bg-[#ffb84d] text-[#3a0909]";
 
   return (
+  <>
+   <Helmet>
+        <title>Login | KL Stall</title>
+        <meta
+          name="description"
+          content="Login to your KL Stall account to manage your profile, packages, orders, and dashboard securely."
+        />
+      </Helmet>
     <div className={`relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden ${pageBg}`}>
 
       {/* GLOBAL CSS FIX */}
@@ -210,5 +219,6 @@ export default function Login() {
         </div>
       </motion.div>
     </div>
+   </>
   );
 }

@@ -4,6 +4,7 @@ import "./index.css";
 import "./responsive-fix.css";
 import "./i18n";
 import App from "./App.jsx";
+import { HelmetProvider } from "react-helmet-async";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
@@ -21,9 +22,9 @@ root.render(
         {/* Global Theme & Preferences */}
         <ThemeProvider>
           <PreferencesProvider>
-
-            <App />
-
+            <HelmetProvider>
+              <App />
+            </HelmetProvider>
           </PreferencesProvider>
         </ThemeProvider>
       </CartProvider>

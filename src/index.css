@@ -60,18 +60,17 @@ button { font-family: inherit; }
   padding-right: 1rem;
 }
 
+/* This */
 /* Custom scrollbar (optional) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 1px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+::-webkit-scrollbar-track {                                                        background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #ff7ac3;
   border-radius: 10px;
 }
-
 /* Ensure root children stretch vertically */
 #__next, #root {
   width: 100%;
@@ -148,4 +147,10 @@ html.dark input, html.dark textarea, html.dark select {
 
 html.dark button {
   color: #fff !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

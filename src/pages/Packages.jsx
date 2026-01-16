@@ -6,6 +6,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "react-i18next";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet-async";
 
 export default function Packages() {
   const { t } = useTranslation();
@@ -108,13 +109,21 @@ export default function Packages() {
       : "bg-white border border-[#FF66C4] text-[#1a1a1a]";
 
   return (
-    <div className={`min-h-screen w-full px-4 py-10 flex flex-col items-center ${pageBg}`}>
-      <Toaster />
+   <>
+    <Helmet>
+        <title>Packages | KL Stall</title>
+        <meta
+          name="description"
+          content="Browse and choose the best KL Stall packages designed for different business needs and budgets."
+        />
+      </Helmet>
+       <div className={`min-h-screen w-full px-4 py-10 flex flex-col items-center ${pageBg}`}>
+         <Toaster />
 
-      {/* Title */}
-      <h1 className="text-3xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
-        {t("our_packages")}
-      </h1>
+         {/* Title */}
+        <h1 className="text-3xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
+          {t("our_packages")}
+        </h1>
 
       {/* Category Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-6 max-w-screen-xl">
@@ -218,5 +227,6 @@ export default function Packages() {
         </motion.button>
       )}
     </div>
+   </>
   );
 }

@@ -1,6 +1,6 @@
 // src/pages/Profile.jsx
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -10,10 +10,14 @@ import { ThemeContext } from "../contexts/ThemeContext";
 export default function Profile() {
   const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState({});
+  const [editOpen, setEditOpen] = useState(false);
+
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [joinedAt, setJoinedAt] = useState("");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -21,206 +25,343 @@ export default function Profile() {
   const [address, setAddress] = useState("");
 
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [oldFilePath, setOldFilePath] = useState(null);
 
   const fileRef = useRef(null);
-  const navigate = useNavigate();
 
-  /* LOAD PROFILE */
+  /* ---------------- LOAD PROFILE ---------------- */
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error(t("login_required"));
-        navigate("/login");
-        return;
+      if (!user) return navigate("/login");
+
+      const [{ data: profile }, { data: orders }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("orders").select("id").eq("user_id", user.id)
+      ]);
+
+      if (profile) {
+        setName(profile.full_name || "");
+        setPhone(profile.phone || "");
+        setAbout(profile.about || "");
+        setAddress(profile.address || "");
+        setAvatarPreview(profile.avatar_url || null);
+        setAvatarUrl(profile.avatar_url || null);
+        setOldFilePath(profile.avatar_url || null);
+        if (profile.created_at) {
+          setJoinedAt(new Date(profile.created_at).toLocaleDateString());
+        }
       }
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      setProfile(data || {});
-      setName(data?.full_name || "");
-      setPhone(data?.phone || "");
-      setAbout(data?.about || "");
-      setAddress(data?.address || "");
-      setAvatarPreview(data?.avatar_url || null);
-      setOldFilePath(data?.avatar_url || null);
+      setOrdersCount(orders?.length || 0);
       setLoading(false);
     }
-
     load();
   }, [navigate]);
 
-  /* AVATAR UPLOAD */
+  /* ---------------- AVATAR UPLOAD ---------------- */
   const handleFileChange = async (file) => {
     if (!file) return;
-
     setAvatarPreview(URL.createObjectURL(file));
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+    const { data: { user } } = await supabase.auth.getUser();
+    const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
-      const { error } = await supabase.storage
-        .from("Uploads")
-        .upload(filePath, file, { upsert: true });
+    await supabase.storage.from("Uploads").upload(filePath, file, { upsert: true });
+    if (oldFilePath) await supabase.storage.from("Uploads").remove([oldFilePath]);
 
-      if (error) throw error;
+    const { data } = supabase.storage.from("Uploads").getPublicUrl(filePath);
+    setAvatarUrl(data.publicUrl);
+    setOldFilePath(filePath);
 
-      if (oldFilePath) {
-        await supabase.storage.from("Uploads").remove([oldFilePath]);
-      }
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      avatar_url: data.publicUrl
+    });
 
-      setOldFilePath(filePath);
-
-      const { data } = supabase.storage.from("Uploads").getPublicUrl(filePath);
-
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        avatar_url: data.publicUrl,
-      });
-
-      toast.success(t("profile_image_updated"));
-    } catch {
-      toast.error(t("upload_failed"));
-    }
+    toast.success(t("profile_image_updated"));
   };
 
-  /* SAVE PROFILE */
-  const save = async (e) => {
-    e.preventDefault();
-
-    if (!name.trim()) return toast.error(t("name_required"));
-    if (!phone.trim()) return toast.error(t("phone_required"));
-    if (!address.trim()) return toast.error(t("address_required"));
-
+  /* ---------------- SAVE PROFILE ---------------- */
+  const save = async () => {
     setSaving(true);
-
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("profiles").upsert({
+    await supabase.from("profiles").upsert({
       id: user.id,
       full_name: name,
       phone,
       about,
       address,
-      avatar_url: avatarPreview,
+      avatar_url: avatarUrl
     });
 
     setSaving(false);
-    if (error) return toast.error(error.message);
-
+    setEditOpen(false);
     toast.success(t("profile_saved"));
   };
 
-  /* THEME CLASSES */
   const pageBg =
     theme === "dark"
-      ? "bg-[#0e0e0e]"
-      : "bg-gradient-to-b from-[#FFF5F9] to-[#FFE4EC]";
+      ? "bg-[#0e0e0e] text-white"
+      : "bg-gradient-to-b from-[#FFF5F9] to-[#FFE4EC] text-black";
 
-  const cardClass =
-    theme === "dark"
-      ? "bg-[#1b1b1b] border border-[#FF66C4]/40 text-white shadow-xl rounded-3xl p-8"
-      : "bg-white border border-[#FF66C4]/20 text-black shadow-xl rounded-3xl p-8";
+  if (loading) return <div className={`min-h-screen ${pageBg}`} />;
 
-  const inputClass =
-    "p-3 rounded-xl border focus:ring-2 w-full transition-all " +
-    (theme === "dark"
-      ? "bg-[#121212] border-[#FF66C4] text-white focus:ring-[#FF66C4]"
-      : "bg-white border-[#FF66C4] focus:ring-[#FF66C4] text-black");
-
-  const buttonPrimary =
-    "w-full py-3 rounded-xl font-semibold transition shadow-md text-white bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]";
-
-  const buttonSecondary =
-    "block w-full py-3 rounded-xl mt-4 border text-center transition font-medium " +
-    (theme === "dark"
-      ? "border-gray-600 text-gray-300 hover:bg-[#1A1A1A]"
-      : "border-gray-300 text-gray-700 hover:bg-gray-100");
-
-  /* LOADING */
-  if (loading)
-    return (
-      <div className={`min-h-screen flex items-center justify-center text-lg ${pageBg}`}>
-        {t("loading_profile")}
-      </div>
-    );
-
-  /* MAIN UI */
   return (
-    <div className={`min-h-screen px-4 py-16 flex justify-center items-start ${pageBg}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 25 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`w-full max-w-xl ${cardClass}`}
-      >
-        {/* TITLE */}
-        <h2 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]">
-          {t("your_profile")}
-        </h2>
+    <div className={`min-h-screen ${pageBg}`}>
+      {/* HEADER */}
+      {/* ===== PROFILE HEADER ===== */}
+      <div className="relative">
+        <div
+          className="h-44 rounded-b-[48px] overflow-hidden"
+          style={{
+            backgroundImage: `
+              linear-gradient(
+                to bottom right,
+                rgba(255,102,196,0.85),
+                rgba(255,159,159,0.85),
+                rgba(255,222,89,0.85)
+              ),
+              url("https://i.ibb.co/93h2gF87/downloaded-Image-7.png")
+            `,
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        />
 
-        {/* Avatar */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg border-4 border-[#FF66C4]">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  {t("no_avatar")}
-                </div>
-              )}
-            </div>
-
-            <div
-              onClick={() => fileRef.current.click()}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer text-white rounded-full"
-            >
-              {t("change")}
-            </div>
-
-            <input
-              type="file"
-              ref={fileRef}
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => handleFileChange(e.target.files[0])}
+  {/* Floating Avatar */}
+  <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
+    <div className="relative">
+      <div className="w-28 h-28 rounded-full bg-white p-1 shadow-xl">
+        <div className="w-full h-full rounded-full overflow-hidden border-4 border-white">
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt="Profile"
+              className="w-full h-full object-cover"
             />
-          </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              {t("no_avatar")}
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* FORM */}
-        <form onSubmit={save} className="grid gap-6 mb-6">
-          <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("full_name")} />
-          <input className={inputClass} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("phone")} />
-          <input className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("address")} />
-          <textarea className={inputClass} rows="3" value={about} onChange={(e) => setAbout(e.target.value)} placeholder={t("about_optional")} />
+      {/* Change Avatar Overlay */}
+      <button
+        onClick={() => fileRef.current.click()}
+        className="
+          absolute inset-0
+          rounded-full
+          bg-black/40
+          text-white
+          text-sm
+          opacity-0
+          hover:opacity-100
+          transition
+        "
+      >
+        {t("change")}
+      </button>
 
-          <button type="submit" disabled={saving} className={buttonPrimary}>
-            {saving ? t("saving") : t("save_profile")}
-          </button>
-        </form>
+      <input
+        type="file"
+        ref={fileRef}
+        hidden
+        accept="image/*"
+        onChange={(e) => handleFileChange(e.target.files[0])}
+      />
+    </div>
+  </div>
+</div>
 
-        {/* Navigations */}
-        <Link to="/settings" className={buttonSecondary}>
+{/* Spacer for avatar overlap */}
+<div className="h-16" />
+
+{/* Name & Role */}
+<div className="flex flex-col items-center mt-2">
+  <h2
+    className="
+      text-xl font-semibold
+      bg-clip-text text-transparent
+      bg-gradient-to-r
+      from-[#FF66C4]
+      to-[#FFDE59]
+    "
+  >
+    {name}
+  </h2>
+
+  <p className="text-sm opacity-70 mt-1">
+    Member · KL Stall
+  </p>
+
+  {/* Inline Premium Edit Button */}
+  <button
+    onClick={() => setEditOpen(true)}
+    className="
+      mt-4 px-6 py-2
+      rounded-full
+      text-sm font-medium
+      border border-[#FF66C4]/40
+      text-[#FF66C4]
+      bg-white/70 dark:bg-white/5
+      backdrop-blur-md
+      shadow-sm
+      hover:shadow-md
+      transition
+    "
+  >
+    {t("edit_profile")}
+  </button>
+</div>
+
+      {/* STATS */}
+      <div className="px-6 grid grid-cols-2 gap-4">
+        <Stat label={t("orders")} value={ordersCount} />
+        <Stat label={t("joined")} value={joinedAt} />
+      </div>
+
+      {/* INFO */}
+      <div className="mt-8 px-6 space-y-5 text-sm">
+        <Row label={t("full_name")} value={name} />
+        <Row label={t("phone")} value={phone} />
+        <Row label={t("address")} value={address} />
+        <Row label={t("about_optional")} value={about || "—"} />
+      </div>
+
+      {/* ACTIONS */}
+      <div className="mt-10 px-6 space-y-3">
+        <Link
+          to="/settings"
+          className="
+            block py-3 text-center rounded-xl
+            border border-[#FF66C4]/30
+            bg-white/50 dark:bg-white/5
+            backdrop-blur-md
+            hover:shadow-md
+            transition
+          "
+        >
           {t("settings")}
         </Link>
-
+        <Link
+          to="/dashboard"
+          className="
+            block py-3 text-center rounded-xl
+            border border-[#FF66C4]/30
+            bg-white/50 dark:bg-white/5
+            backdrop-blur-md
+            hover:shadow-md
+            transition
+          "
+        >
+          {t("dashboard")}
+        </Link>
         <button
           onClick={async () => {
             await supabase.auth.signOut();
             navigate("/login");
           }}
-          className={buttonSecondary}
+          className="
+            w-full py-3 rounded-xl
+            border border-red-400/40
+            text-red-500
+            bg-white/40 dark:bg-white/5
+            backdrop-blur-md
+            hover:shadow-md
+            transition
+          "
         >
           {t("logout")}
         </button>
-      </motion.div>
+      </div>
+
+      {/* BOTTOM SHEET */}
+      <AnimatePresence>
+        {editOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-40"
+              onClick={() => setEditOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            <motion.div
+              className="fixed bottom-0 left-0 right-0 z-50
+                         rounded-t-3xl
+                         bg-white dark:bg-[#1b1b1b]
+                         p-6"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              <h3 className="text-lg font-semibold mb-4">{t("edit_profile")}</h3>
+
+              <div className="space-y-3">
+                <input className="w-full p-3 rounded-xl border" value={name} onChange={(e) => setName(e.target.value)} />
+                <input className="w-full p-3 rounded-xl border" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <input className="w-full p-3 rounded-xl border" value={address} onChange={(e) => setAddress(e.target.value)} />
+                <textarea className="w-full p-3 rounded-xl border" rows="3" value={about} onChange={(e) => setAbout(e.target.value)} />
+              </div>
+
+              <button
+                disabled={saving}
+                onClick={save}
+                className="
+                  w-full mt-5 py-3 rounded-xl
+                  text-white font-semibold
+                  bg-gradient-to-r from-[#FF66C4] to-[#FFDE59]
+                  shadow-md
+                  hover:shadow-lg
+                  transition
+                "
+              >
+                {saving ? t("saving") : t("save_profile")}
+              </button>
+
+              <button
+                onClick={() => setEditOpen(false)}
+                className="
+                  w-full mt-2 py-3 rounded-xl
+                  border border-gray-300
+                  bg-white/60
+                  hover:shadow
+                  transition
+                "
+              >
+                {t("cancel")}
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ---------------- SMALL COMPONENTS ---------------- */
+
+function Row({ label, value }) {
+  return (
+    <div className="flex justify-between">
+      <span className="opacity-60">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-[#FF66C4]/30 p-4 text-center bg-white/40 dark:bg-white/5 backdrop-blur-md">
+      <p className="text-xs opacity-60">{label}</p>
+      <p className="font-semibold">{value}</p>
     </div>
   );
 }
